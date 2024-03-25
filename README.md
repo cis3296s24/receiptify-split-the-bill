@@ -1,28 +1,33 @@
-# Project Name
-Put here a short paragraph describing your project. 
-Adding an screenshot or a mockup of your application in action would be nice.  
+# Receiptify: Split the Bill
 
-![This is a screenshot.](images.png)
-# How to run
-Provide here instructions on how to use your application.   
-- Download the latest binary from the Release section on the right on GitHub.  
-- On the command line uncompress using
-```
-tar -xzf  
-```
-- On the command line run with
-```
-./hello
-```
-- You will see Hello World! on your terminal. 
+Receiptify: Split the Bill is inspired by the original Receiptify, a web application that generates receipts that lists out a user's top tracks in the past, month, 6 months, and all time. Our version of receiptify generates receipts based on a group of users in a session. Our application generates a combined music receipt that displays a compiled list of all users' top tracks in the past, month, 6 months, and all time.
 
-# How to contribute
-Follow this project board to know the latest status of the project: [http://...]([http://...])  
+Web application inspired by https://www.instagram.com/albumreceipts/. Generates receipts that list out a user's top tracks in the past month, 6 months, and all time.
 
-### How to build
-- Use this github repository: ... 
-- Specify what branch to use for a more stable release or for cutting edge development.  
-- Use InteliJ 11
-- Specify additional library to download if needed 
-- What file and target to compile and run. 
-- What is expected to happen when the app start. 
+The application inspired by https://receiptify.herokuapp.com/. Generates receipts on a website for a single user's spotify data.
+
+## Running the App Locally
+
+This app runs on Node.js. On [its website](http://www.nodejs.org/download/) you can find instructions on how to install it. You can also follow [this gist](https://gist.github.com/isaacs/579814) for a quick and easy way to install Node.js and npm.
+
+Once installed, clone the repository and install its dependencies running:
+
+    $ npm install
+
+### Using your own credentials
+
+You will need to register your app and get your own credentials from the Spotify for Developers Dashboard.
+
+To do so, go to [your Spotify for Developers Dashboard](https://beta.developer.spotify.com/dashboard) and create your application. In my own development process, I registered these Redirect URIs:
+
+- http://localhost:3000 (needed for the implicit grant flow)
+- http://localhost:3000/callback
+
+Once you have created your app, load the `client_id`, `redirect_uri` and `client_secret` into a `config.js` file.
+
+In order to run the app, open the folder, and run its `app.js` file:
+
+    $ cd authorization_code
+    $ node app.js
+
+Then, open `http://localhost:3000` in a browser.
