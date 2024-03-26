@@ -74,6 +74,12 @@ app
   .use(cors())
   .use(cookieParser());
 
+app.use((req, res, next) => {
+  const ipAddress = req.socket.remoteAddress;
+  console.log(`Incoming Connection: ${ipAddress}`);
+  next();
+})
+
 app.get('/login', function (req, res) {
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
