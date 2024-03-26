@@ -1,3 +1,6 @@
+const os = require('os');
+
+
 /**
  * This is an example of a basic node.js script that performs
  * the Authorization Code oAuth2 flow to authenticate against
@@ -27,7 +30,22 @@ const client_secret = 'fd5c90696d984ca7a65a54853f340c70';//process.env.clientSec
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
 
-var redirect_uri = process.env.redirect_uri || 'http://localhost:3000/callback'; // Your redirect uri
+
+const networkInterfaces = os.networkInterfaces();
+
+let serverIP;
+
+for (const name of Object.keys(networkInterfaces)) {
+  for (const address of networkInterfaces[name]) {
+    if (address.family === 'IPv4' && !address.internal) { // Filter IPv4 and non-internal interfaces
+      serverIP = address.address;
+      break;
+    }
+  }
+}
+
+
+var redirect_uri = process.env.redirect_uri || `http://${serverIP}:3000/callback`; // Your redirect uri
 // var redirect_uri = "http://localhost:3000/callback";
 /**
  * Generates a random string containing numbers and letters
@@ -201,6 +219,6 @@ app.get('/refresh_token', function (req, res) {
   });
 });
 
-app.listen(process.env.PORT || 3000, function () {
-  console.log('Server is running on port 3000');
+app.listen(process.env.PORT || 5555, function () {
+  console.log(`Server is running on ${serverIP}:5555`);
 });
