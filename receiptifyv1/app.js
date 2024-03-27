@@ -76,7 +76,8 @@ app
 
 app.use((req, res, next) => {
   const ipAddress = req.socket.remoteAddress;
-  console.log(`Incoming Connection: ${ipAddress}`);
+  const sessionID = req.query.sessionID;
+  console.log(`Incoming Connection: ${ipAddress} | Session: ${sessionID}`);
   next();
 })
 
