@@ -1,3 +1,5 @@
+<!-- npm install ejs-->
+<!--
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +9,33 @@
   <link rel="stylesheet" href="style.css"> </head>
 <body>
   <h1>Hello!</h1>
+  <p>{{ sessionID }}</p>
   <p id="message"></p>
   <script src="session.js"></script>  </body>
 </html>
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Variable Example</title>
+  <link rel="stylesheet" href="style.css"> 
+</head>
+<body>
+  <h1>GROUP RECEIPTIFY SESSION</h1>
+  <p id="sessionID"></p>
+  <script>
+    // Access the sessionID passed from backend
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionID = urlParams.get('sessionID');
+
+    // Update the HTML element with the sessionID
+    document.getElementById("sessionID").textContent = "session ID: " + sessionID;
+  </script>  
+</body>
+</html>
+
+
+

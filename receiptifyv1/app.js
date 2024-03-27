@@ -101,9 +101,11 @@ app.get('/login', function (req, res) {
   );
 });
 
+
 app.get('/session', function (req, res){
   const sessionID = req.query.sessionID;
-  res.sendFile(__dirname + '/public/session.html', { sessionID});
+  console.log(sessionID)
+  res.sendFile(__dirname + '/public/session.html', {sessionID: sessionID});
 });
 
 
