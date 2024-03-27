@@ -77,7 +77,7 @@ app
 app.use((req, res, next) => {
   const ipAddress = req.socket.remoteAddress;
   const sessionID = req.query.sessionID;
-  console.log(`Incoming Connection: ${ipAddress} | Session: ${sessionID}`);
+  console.log(`Incoming Connection: ${ipAddress}`);
   next();
 })
 
@@ -105,10 +105,12 @@ app.get('/login', function (req, res) {
 
 app.get('/session', function (req, res){
   const sessionID = req.query.sessionID;
-  console.log(sessionID)
+  console.log("Connection Attempting to Join Session: " + sessionID)
   res.sendFile(__dirname + '/public/session.html', {sessionID: sessionID});
 });
-
+// how do i find all users currently in the session right now
+// instead of making it live, add as we go, but show status of the user.
+// when a logging in track spotify user id (user authentication) 
 
 
 app.get('/applemusic', function (req, res) {
@@ -233,6 +235,14 @@ app.get('/refresh_token', function (req, res) {
       });
     }
   });
+});
+
+app.use((req, res, next) =>{
+  res.on('finish', () =>{
+    const ipAddress = req.socket.remoteAddress;
+    console.log(`Connection from ${ipAddress} has been closed.`);
+  });
+  next();
 });
 
 app.listen(process.env.PORT || 5555, function () {
