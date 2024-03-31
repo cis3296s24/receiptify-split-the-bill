@@ -24,8 +24,9 @@ const cors = require('cors');
 // const { config } = require("./config");
 require('dotenv').config();
 
-const client_id = '792207d6524f4255a1730e478d8b66f6';//process.env.clientID; // Your client id
-const client_secret = 'fd5c90696d984ca7a65a54853f340c70';//process.env.clientSecret; // Your secret
+
+const client_id = '035844db2ccb4d0698ab8e14bb12f27a';
+const client_secret = '8bfd5a9fa7a44aedbf8bf8f513236b4f';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -44,8 +45,11 @@ for (const name of Object.keys(networkInterfaces)) {
   }
 }
 
+/**
+ * redirect_uri must equal what is in the developer dashboard. If we move to server and have a static IP, then we can change to a set IP address.
+ */
 
-var redirect_uri = process.env.redirect_uri || `http://${serverIP}:3000/callback`; // Your redirect uri
+var redirect_uri = process.env.redirect_uri || `http://${serverIP}:5555/callback`; 
 // var redirect_uri = "http://localhost:3000/callback";
 /**
  * Generates a random string containing numbers and letters
@@ -176,8 +180,9 @@ app.get('/callback', function (req, res) {
       },
       headers: {
         Authorization:
-          'Basic ' +
-          new Buffer(client_id + ':' + client_secret).toString('base64'),
+          //'Basic ' +
+          //new Buffer(client_id + ':' + client_secret).toString('base64'),
+          'Basic ' + Buffer.from(client_id + ':' + client_secret).toString('base64'),
       },
       json: true,
     };
@@ -246,5 +251,7 @@ app.use((req, res, next) =>{
 });
 
 app.listen(process.env.PORT || 5555, function () {
+  console.log(process.env.PORT);
   console.log(`Server is running on ${serverIP}:5555`);
+
 });
