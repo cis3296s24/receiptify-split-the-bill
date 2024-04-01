@@ -209,6 +209,7 @@ app.get('/callback', function (req, res) {
         //   longTerm: retrieveTracksSpotify(access_token, "long_term", 3, "ALL TIME")
         // });
       } else {
+        console.log("ERROR")
         res.send('There was an error during authentication.');
       }
     });
