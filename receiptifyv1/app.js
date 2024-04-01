@@ -115,6 +115,31 @@ app.get('/session', function (req, res){
 // instead of making it live, add as we go, but show status of the user.
 // when a logging in track spotify user id (user authentication) 
 
+app.get('/join', function (req, res){
+  var state = generateRandomString(16);
+  res.cookie(stateKey, state);
+
+  // your application requests authorization
+  // user-read-private & user-read-email used to get current user info
+  // user-top-read used to get top track info
+  var scope =
+    'user-read-private user-read-email user-top-read playlist-modify-public';
+  res.redirect(
+    'https://accounts.spotify.com/authorize?' +
+      querystring.stringify({
+        response_type: 'code',
+        client_id: client_id,
+        scope: scope,
+        redirect_uri: redirect_uri,
+        state: state,
+      })
+  );
+  res.sendFile(__dirname + '/public/session.html');
+
+});
+
+
+
 
 app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
