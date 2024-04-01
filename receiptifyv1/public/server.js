@@ -299,6 +299,7 @@ const TYPE_FUNCTIONS = {
   },
 };
 
+
 const hideReceipt = () => {
   $('#loggedin').hide();
   $('#receipt').hide();
@@ -387,6 +388,8 @@ const initSearch = () => {
             })
           );
           response(items);
+          console.log(response);
+          print(response);
         },
         error: function (error) {
           console.error('Error:', error);
@@ -554,6 +557,7 @@ const saveAsPlaylist = (response) => {
   $('#save-playlist').text('loading...');
   const tracks = response.items;
   const uris = tracks.map(({ uri }) => uri);
+  console.log(response);
 
   createPlaylist(uris);
 };
@@ -892,6 +896,7 @@ function retrieveItems() {
         }
       },
     });
+    console.log(item);
   } else {
     $.ajax({
       url: `${SPOTIFY_ROOT}/me/top/${
@@ -1052,3 +1057,5 @@ document
     document.querySelector('.navColor ul').classList.toggle('show');
   });
 $('#logout-btn').hide();
+
+
