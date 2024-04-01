@@ -101,6 +101,8 @@ app.get('/login', function (req, res) {
   );
 });
 
+app.get('/join', function (req, function))
+
 app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
     algorithm: 'ES256',
