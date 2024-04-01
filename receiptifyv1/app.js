@@ -50,7 +50,6 @@ for (const name of Object.keys(networkInterfaces)) {
  */
 
 var redirect_uri = process.env.redirect_uri || `http://${serverIP}:5555/callback`; 
-// var redirect_uri = "http://localhost:3000/callback";
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -209,7 +208,6 @@ app.get('/callback', function (req, res) {
         //   longTerm: retrieveTracksSpotify(access_token, "long_term", 3, "ALL TIME")
         // });
       } else {
-        console.log("ERROR")
         res.send('There was an error during authentication.');
       }
     });
@@ -252,7 +250,6 @@ app.use((req, res, next) =>{
 });
 
 app.listen(process.env.PORT || 5555, function () {
-  console.log(process.env.PORT);
   console.log(`Server is running on ${serverIP}:5555`);
 
 });
