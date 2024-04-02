@@ -50,7 +50,7 @@ for (const name of Object.keys(networkInterfaces)) {
  * redirect_uri must equal what is in the developer dashboard. If we move to server and have a static IP, then we can change to a set IP address.
  */
 
-var redirect_uri = process.env.redirect_uri || `http://${serverIP}:5555/callback`; 
+var redirect_uri = process.env.redirect_uri || `http://${serverIP}:3000/callback`; 
 /**
  * Generates a random string containing numbers and letters
  * @param  {number} length The length of the string
@@ -286,7 +286,7 @@ app.use((req, res, next) =>{
   next();
 });
 
-app.listen(process.env.PORT || 5555, function () {
-  console.log(`Server is running on ${serverIP}:5555`);
+app.listen(process.env.PORT || 3000, function () {
+  console.log(`Server is running on ${serverIP}:3000`);
 
 });
