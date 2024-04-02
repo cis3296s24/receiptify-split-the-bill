@@ -11,6 +11,7 @@ const os = require('os');
  */
 const express = require('express'); // Express web server framework
 const request = require('request');
+
 // const axios = require("axios"); // "Request" library
 // const bodyParser = require("body-parser");
 // const cors = require("cors");
@@ -115,6 +116,36 @@ app.get('/session', function (req, res){
 // instead of making it live, add as we go, but show status of the user.
 // when a logging in track spotify user id (user authentication) 
 
+app.get('/join', function (req, res){
+  res.sendFile(__dirname + '/public/join.html')
+});
+
+app.get('/submit', function (req, res){
+  console.log(`/submit SessionID: ${req.query.sessionID}`);
+  var state = generateRandomString(16);
+  res.cookie(stateKey, state);
+  sessionIDString = 'sessionID'
+  res.cookie(sessionIDString, req.query.sessionID);
+  // your application requests authorization
+  // user-read-private & user-read-email used to get current user info
+  // user-top-read used to get top track info
+  var scope =
+    'user-read-private user-read-email user-top-read playlist-modify-public';
+  res.set('sessionID', req.query.sessionID);
+  res.redirect(
+    'https://accounts.spotify.com/authorize?' +
+      querystring.stringify({
+        response_type: 'code',
+        client_id: client_id,
+        scope: scope,
+        redirect_uri: redirect_uri,
+        state: state,
+      })
+  );
+});
+
+
+
 
 app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
@@ -156,11 +187,15 @@ app.get('/lastfm', function (req, res) {
 app.get('/callback', function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
-
+  sessionIDString = 'sessionID'
+  console.log(`/callback sessionID: ${req.cookies[sessionIDString]}`);
+  sessionID = req.cookies[sessionIDString];
   var code = req.query.code || null;
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
+  
 
+  
   if (state === null || state !== storedState) {
     res.redirect(
       '/#' +
@@ -198,6 +233,7 @@ app.get('/callback', function (req, res) {
               client: 'spotify',
               access_token: access_token,
               refresh_token: refresh_token,
+              sessionID: sessionID // add the session ID
             })
         );
         // res.redirect("/spotify");
@@ -210,6 +246,7 @@ app.get('/callback', function (req, res) {
       } else {
         res.send('There was an error during authentication.');
       }
+
     });
   }
 });

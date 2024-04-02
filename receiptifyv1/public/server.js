@@ -619,6 +619,10 @@ const displayReceipt = (response, stats) => {
     if (!$('#receipt').is(':visible')) $('#receipt').show();
   $('#start-searching').hide();
 
+  let params = getHashParams();
+  console.log(params);
+  console.log(params.sessionID);
+
   const fns = TYPE_FUNCTIONS[type];
   const { getResponseItems, itemFns, totalIncrement } = fns;
 
@@ -656,7 +660,7 @@ const displayReceipt = (response, stats) => {
   }
 
   const responseItems = getResponseItems(response, stats);
-
+  const sessionID = params.sessionID;
   let total = 0;
   const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
   const tracksFormatted = responseItems.map((item, i) => {
@@ -676,6 +680,7 @@ const displayReceipt = (response, stats) => {
     tracks: tracksFormatted,
     total: totalFormatted,
     time: date,
+    sessionID: sessionID,
     num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
     name: showSearch && response.label ? response.label : displayName,
     period: showSearch
