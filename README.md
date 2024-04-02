@@ -31,3 +31,15 @@ In order to run the app, open the folder, and run its `app.js` file:
     $ node app.js
 
 Then, open `http://localhost:3000` in a browser.
+
+#### Hosting the App Locally
+
+To allow users to access your app, you need to add them into user managment from the Spotify for Developers Dashboard.
+
+When hosting, set the Redirect URI as:
+- http://[serverIP]:3000 (needed for implicit grant flow)
+- http://[serverIP]:3000/callback
+
+Setting Redirect URI as http://localhost:3000/callback when trying to host the application for local clients to connect to will fail because the redirect URI points to the client's IP address (localhost).
+
+
