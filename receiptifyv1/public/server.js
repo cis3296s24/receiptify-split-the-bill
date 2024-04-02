@@ -711,6 +711,7 @@ const displayReceipt = (response, stats) => {
   } else {
     $('#save-playlist').hide();
   }
+  console.log(responseItems);
 };
 
 function getAvg(arr) {
