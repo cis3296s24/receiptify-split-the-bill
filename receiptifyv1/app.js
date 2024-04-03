@@ -66,6 +66,16 @@ var generateRandomString = function (length) {
   }
   return text;
 };
+var generateSessionID = function () {
+  var text = '';
+  var possible =
+    '0123456789';
+
+  for (var i = 0; i < 6; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
 
 var stateKey = 'spotify_auth_state';
 
@@ -88,7 +98,6 @@ app.use((req, res, next) => {
 app.get('/login', function (req, res) {
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
-
   // your application requests authorization
   // user-read-private & user-read-email used to get current user info
   // user-top-read used to get top track info
@@ -112,6 +121,11 @@ app.get('/session', function (req, res){
   console.log("Connection Attempting to Join Session: " + sessionID)
   res.sendFile(__dirname + '/public/session.html', {sessionID: sessionID});
 });
+
+//app.get('/login', function (req, res) {
+ // console.log("it be working");
+//});
+
 // how do i find all users currently in the session right now
 // instead of making it live, add as we go, but show status of the user.
 // when a logging in track spotify user id (user authentication) 
@@ -187,15 +201,17 @@ app.get('/lastfm', function (req, res) {
 app.get('/callback', function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
-  sessionIDString = 'sessionID'
-  console.log(`/callback sessionID: ${req.cookies[sessionIDString]}`);
+sessionID = generateSessionID();
+sessionIDString = 'sessionID'
+if (req.cookies[sessionIDString] != null){
   sessionID = req.cookies[sessionIDString];
+}
+console.log(`/callback sessionID: ` + sessionID);
   var code = req.query.code || null;
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
-  
 
-  
+
   if (state === null || state !== storedState) {
     res.redirect(
       '/#' +
