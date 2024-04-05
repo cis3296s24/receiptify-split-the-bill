@@ -940,7 +940,7 @@ function retrieveStats() {
   });
 }
 
-function retrieveItemsApple(hist) {
+/*function retrieveItemsApple(hist) {
   // $('#spotify-logo').hide();
   document.querySelectorAll('.btn-group').forEach((el) => {
     el.style.display = 'none';
@@ -989,7 +989,7 @@ function retrieveItemsApple(hist) {
   document
     .getElementById('download')
     .addEventListener('click', () => downloadImg('heavy_rotation'));
-}
+}*/
 
 let params = getHashParams();
 
