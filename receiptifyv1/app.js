@@ -1,6 +1,5 @@
 const os = require('os');
 
-
 /**
  * This is an example of a basic node.js script that performs
  * the Authorization Code oAuth2 flow to authenticate against
@@ -12,6 +11,7 @@ const os = require('os');
 const express = require('express'); // Express web server framework
 const request = require('request');
 
+const axios = require('axios');
 // const axios = require("axios"); // "Request" library
 // const bodyParser = require("body-parser");
 // const cors = require("cors");
@@ -46,10 +46,15 @@ for (const name of Object.keys(networkInterfaces)) {
   }
 }
 
+// // Open file for writing (creates a new file if it doesn't exist)
+// fs.writeFile('filename.txt', 'New content to be written', (err) => {
+//   if (err) throw err;
+//   console.log('File has been written!');
+// });
+
 /**
  * redirect_uri must equal what is in the developer dashboard. If we move to server and have a static IP, then we can change to a set IP address.
  */
-
 var redirect_uri = process.env.redirect_uri || `http://${serverIP}:3000/callback`; 
 /**
  * Generates a random string containing numbers and letters
@@ -113,6 +118,7 @@ app.get('/login', function (req, res) {
         state: state,
       })
   );
+
 });
 
 
@@ -156,7 +162,6 @@ app.get('/submit', function (req, res){
         state: state,
       })
   );
-});
 
 
 /*app.get('/applemusic', function (req, res) {
@@ -196,15 +201,24 @@ app.get('/submit', function (req, res){
   res.sendFile(__dirname + '/public/lastfm.html');
 });*/
 
+async function fetchProfile(token) {
+  const result = await fetch("https://api.spotify.com/v1/me", {
+      method: "GET", headers: { Authorization: `Bearer ${token}` }
+  });
+
+  return await result.json();
+}
+
 app.get('/callback', function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
-sessionID = generateSessionID();
-sessionIDString = 'sessionID'
-if (req.cookies[sessionIDString] != null){
-  sessionID = req.cookies[sessionIDString];
-}
-console.log(`/callback sessionID: ` + sessionID);
+  sessionID = generateSessionID();
+  sessionIDString = 'sessionID'
+  if (req.cookies[sessionIDString] != null){
+    sessionID = req.cookies[sessionIDString];
+  }
+  console.log(`/callback sessionID: ` + sessionID);
+
   var code = req.query.code || null;
   var state = req.query.state || null;
   var storedState = req.cookies ? req.cookies[stateKey] : null;
@@ -235,12 +249,11 @@ console.log(`/callback sessionID: ` + sessionID);
       json: true,
     };
 
-    request.post(authOptions, function (error, response, body) {
+    request.post(authOptions, async function (error, response, body) {
       if (!error && response.statusCode === 200) {
         access_token = body.access_token;
         var access_token = body.access_token,
           refresh_token = body.refresh_token;
-
         res.redirect(
           '/#' +
             querystring.stringify({
@@ -250,6 +263,19 @@ console.log(`/callback sessionID: ` + sessionID);
               sessionID: sessionID // add the session ID
             })
         );
+      
+        const profile = await fetchProfile(access_token);
+        console.log(profile.display_name);   
+
+        // Writing to user data file 
+        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID), (err) => {
+          if (err) 
+          {
+            console.error('error appending to file');
+            return;
+          } 
+          console.log('added session id');
+        });
         // res.redirect("/spotify");
         // console.log(retrieveTracksSpotify(access_token, "short_term", 1, "LAST MONTH"));
         // res.render("spotify", {
@@ -263,6 +289,9 @@ console.log(`/callback sessionID: ` + sessionID);
 
     });
   }
+  
+
+
 });
 
 app.get('/refresh_token', function (req, res) {
@@ -304,3 +333,5 @@ app.listen(process.env.PORT || 3000, function () {
   console.log(`Server is running on ${serverIP}:3000`);
 
 });
+
+
