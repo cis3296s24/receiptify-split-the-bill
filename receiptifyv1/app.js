@@ -26,8 +26,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const client_id = '035844db2ccb4d0698ab8e14bb12f27a';
-const client_secret = '8bfd5a9fa7a44aedbf8bf8f513236b4f';
+const client_id = '82641df2811b48b493da744446b6b90f';
+const client_secret = 'e48944809f164d768c38ca1e9d850021';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -159,9 +159,7 @@ app.get('/submit', function (req, res){
 });
 
 
-
-
-app.get('/applemusic', function (req, res) {
+/*app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
     algorithm: 'ES256',
     expiresIn: '180d',
@@ -185,9 +183,9 @@ app.get('/applemusic', function (req, res) {
   // let music = MusicKit.getInstance();
   // music.authorize().then(console.log('hello'));
   // res.sendFile(__dirname + '/public/applemusic.html');
-});
+});*/
 
-app.get('/lastfm', function (req, res) {
+/*app.get('/lastfm', function (req, res) {
   // res.redirect(
   //   "/#" +
   //     querystring.stringify({
@@ -196,7 +194,7 @@ app.get('/lastfm', function (req, res) {
   //     })
   // );
   res.sendFile(__dirname + '/public/lastfm.html');
-});
+});*/
 
 app.get('/callback', function (req, res) {
   // your application requests refresh and access tokens
