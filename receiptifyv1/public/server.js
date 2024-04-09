@@ -1000,7 +1000,7 @@ let access_token = params.access_token,
   dev_token = params.dev_token,
   client = params.client,
   error = params.error;
-
+  // users need to be grabbed again somewhere here to rerender/.
 if (error) {
   alert('There was an error during the authentication');
 } else {
