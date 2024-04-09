@@ -1,34 +1,36 @@
 #join-session-title {
     font-family: Inter, 'Helvetica Neue', sans-serif;
     font-weight: 600;
-    font-size: 2rem;
-    text-align: center;
-    margin-bottom: 0px;
-    margin-top: 0px;
+    font-size: 3rem;
+    margin: 1rem 0rem 4rem .25rem /* top right bottom left */
 }
 
-#join-session-label {
+#join-session-text {
+    font-size: 2rem;
+    font-family: Inter, 'Helvetica Neue', sans-serif;
+    margin: 1rem 0rem 3rem .25rem;
+}
+
+#join-session {
     text-align: center;
+}
+
+#join-session-input {
+    font-family: Inter, 'Helvetica Neue', sans-serif;
     font-size: 1rem;
-    margin-top: 0px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    color: #333;
-    background-color: #fff;
+    padding: 0.5rem 1rem 0.5rem 1rem
 }
 
 #join-session-btn {
-    margin: 2vh auto;
-    text-align: center;
+    margin: 2rem 0rem 0rem 0rem;
     text-decoration: none;
-    padding: 2vh 3vh;
+    padding: 0.5rem 1rem 0.5rem 1rem;
     background-color: #1db954;
-    font-size: 1rem;
-    border: none;
+    font-size: 1.5rem;
     cursor: pointer;
-    border-radius: 10px;
+    border-width: thin;
+    border-radius: 1rem;
     color: white;
     font-family: 'Helvetica Neue', Helvetica, Geneva, Tahoma, sans-serif;
-    width: 20%;
-    display: block;
-    max-width: 295px;
+
 }
