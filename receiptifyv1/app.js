@@ -1,4 +1,5 @@
 const os = require('os');
+const readline = require('readline');
 
 /**
  * This is an example of a basic node.js script that performs
@@ -26,8 +27,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const client_id = '82641df2811b48b493da744446b6b90f';
-const client_secret = 'e48944809f164d768c38ca1e9d850021';
+const client_id = 'ed86dba0999b415e8c50d26b13fb29f8';
+const client_secret = 'f1421f43be4644dca0076e500d9ed0a6';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -95,7 +96,6 @@ app
 
 app.use((req, res, next) => {
   const ipAddress = req.socket.remoteAddress;
-  const sessionID = req.query.sessionID;
   console.log(`Incoming Connection: ${ipAddress}`);
   next();
 })
@@ -163,7 +163,7 @@ app.get('/submit', function (req, res){
       })
   );
 
-
+})
 /*app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
     algorithm: 'ES256',
@@ -217,6 +217,39 @@ app.get('/callback', function (req, res) {
   if (req.cookies[sessionIDString] != null){
     sessionID = req.cookies[sessionIDString];
   }
+  let users = "";
+
+
+  async function processFile(filePath) {
+    const fileStream = fs.createReadStream(filePath);
+  
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity // to handle different kinds of line endings
+    });
+  
+    const array = [];
+  
+    for await (const line of rl) {
+      const row = line.split(',');
+      if (row[2] == sessionID){
+        users += row[0] + ", ";
+
+      }
+      array.push(row);
+    }
+  
+    return array;
+  }
+  
+  processFile('users.csv')
+    .then(data => {
+      console.log('Parsed data:', data);
+    })
+    .catch(err => {
+      console.log('Error:', err);
+    });
+
   console.log(`/callback sessionID: ` + sessionID);
 
   var code = req.query.code || null;
@@ -260,7 +293,8 @@ app.get('/callback', function (req, res) {
               client: 'spotify',
               access_token: access_token,
               refresh_token: refresh_token,
-              sessionID: sessionID // add the session ID
+              sessionID: sessionID,
+              users: users
             })
         );
       
@@ -268,7 +302,7 @@ app.get('/callback', function (req, res) {
         console.log(profile.display_name);   
 
         // Writing to user data file 
-        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID), (err) => {
+        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID + ','), (err) => {
           if (err) 
           {
             console.error('error appending to file');
@@ -296,6 +330,7 @@ app.get('/callback', function (req, res) {
 
 app.get('/refresh_token', function (req, res) {
   // requesting access token from refresh token
+  console.log("refresh");
   var refresh_token = req.query.refresh_token;
   var authOptions = {
     url: 'https://accounts.spotify.com/api/token',
@@ -333,5 +368,4 @@ app.listen(process.env.PORT || 3000, function () {
   console.log(`Server is running on ${serverIP}:3000`);
 
 });
-
 

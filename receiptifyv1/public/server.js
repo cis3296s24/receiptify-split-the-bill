@@ -661,6 +661,8 @@ const displayReceipt = (response, stats) => {
 
   const responseItems = getResponseItems(response, stats);
   const sessionID = params.sessionID;
+  const name = showSearch && response.label ? response.label : displayName;
+  const users = params.users + name;
   let total = 0;
   const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
   const tracksFormatted = responseItems.map((item, i) => {
@@ -681,8 +683,9 @@ const displayReceipt = (response, stats) => {
     total: totalFormatted,
     time: date,
     sessionID: sessionID,
+    users: users,
     num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
-    name: showSearch && response.label ? response.label : displayName,
+    name: name,
     period: showSearch
       ? response.artists?.map((artist) => artist.name.trim()).join(', ') ??
         undefined
@@ -1012,6 +1015,7 @@ if (error) {
         username = response.id;
         showReceipt();
         retrieveItems();
+        console.log("refresh");
       },
     });
   } else if (client === 'applemusic' && dev_token) {
