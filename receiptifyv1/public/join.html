@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <link href="joinStyles.css" rel="stylesheet" type="text/css" />
   <title>Receiptify Join Session</title>
 </head>
 <body>
-  <h1>Enter SessionID:</h1>
-  <form action="/submit" method="get">  <label for="sessionID">Your SessionID:</label>
-    <input type="text" id="sessionID" name="sessionID"><br>
-    <input type="submit" value="Submit">
-  </form>
+  <h1 id="join-session-title">Receiptify</h1>
+  <div id="join-session">
+    <h2 id="join-session-text">Enter Session ID:</h2>
+    <form action="/submit" method="get">
+      <input type="text" id="join-session-input" name="sessionID"><br>
+      <input type="submit" id="join-session-btn" value="Submit">
+    </form>
+  </div>
+  
 </body>
 </html>
