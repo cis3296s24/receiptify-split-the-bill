@@ -695,6 +695,26 @@ const displayReceipt = (response, stats) => {
       });
       const totalFormatted =
         type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
+      
+      //const users= ['User 1', 'User 2', 'User 3'];
+      // users is alr used, use something else
+      const userCheckbox = document.getElementById('user-checkbox');
+      
+      for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `user${i}`;
+        const userCheckboxTitle = document.createElement('p');
+        userCheckboxTitle.textContent = "Select Users";
+        const label = document.createElement('label');
+        label.textContent = user;
+        label.htmlFor = checkbox.id;
+        userCheckbox.appendChild(userCheckboxTitle);
+        userCheckbox.appendChild(checkbox);
+        userCheckbox.appendChild(label);
+        userCheckbox.appendChild(document.createElement('br'));
+      }
 
       userProfilePlaceholder.innerHTML = userProfileTemplate({
         tracks: tracksFormatted,
