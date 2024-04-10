@@ -2,6 +2,7 @@
  * Obtains parameters from the hash of the URL
  * @return Object
  */
+
 const SPOTIFY_ROOT = 'https://api.spotify.com/v1';
 var userProfileSource = document.getElementById(
     'user-profile-template'
@@ -1000,11 +1001,21 @@ let access_token = params.access_token,
   dev_token = params.dev_token,
   client = params.client,
   error = params.error;
+  console.log(1);
+  fetch("./receiptifyv1/users.csv")
+    .then((res) => res.text())
+    .then((text) => {
+      console.log(text);
+    })
+    .catch((e) => console.error(e));
+  console.log(2);
   // users need to be grabbed again somewhere here to rerender/.
 if (error) {
   alert('There was an error during the authentication');
 } else {
+  fetch ()
   if (client === 'spotify' && access_token) {
+    console.log("yuh");
     $.ajax({
       url: `${SPOTIFY_ROOT}/me`,
       headers: {
@@ -1015,7 +1026,7 @@ if (error) {
         username = response.id;
         showReceipt();
         retrieveItems();
-        console.log("refresh");
+        console.log("Server.js refresh");
       },
     });
   } else if (client === 'applemusic' && dev_token) {

@@ -242,13 +242,7 @@ app.get('/callback', function (req, res) {
     return array;
   }
   
-  processFile('users.csv')
-    .then(data => {
-      console.log('Parsed data:', data);
-    })
-    .catch(err => {
-      console.log('Error:', err);
-    });
+  
 
   console.log(`/callback sessionID: ` + sessionID);
 
@@ -284,32 +278,47 @@ app.get('/callback', function (req, res) {
 
     request.post(authOptions, async function (error, response, body) {
       if (!error && response.statusCode === 200) {
+        console.log("app.js refresh")
         access_token = body.access_token;
-        var access_token = body.access_token,
-          refresh_token = body.refresh_token;
-        res.redirect(
-          '/#' +
-            querystring.stringify({
-              client: 'spotify',
-              access_token: access_token,
-              refresh_token: refresh_token,
-              sessionID: sessionID,
-              users: users
-            })
-        );
-      
+          var access_token = body.access_token,
+            refresh_token = body.refresh_token;
         const profile = await fetchProfile(access_token);
         console.log(profile.display_name);   
+        processFile('users.csv')
+        .then(data => {
+          console.log('Parsed data:', data);
+          
+          //
+          
+          res.redirect(
+            '/#' +
+              querystring.stringify({
+                client: 'spotify',
+                access_token: access_token,
+                refresh_token: refresh_token,
+                sessionID: sessionID,
+                users: users
+              })
+          );
+        
+          
+          
 
-        // Writing to user data file 
-        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID + ','), (err) => {
-          if (err) 
-          {
-            console.error('error appending to file');
-            return;
-          } 
-          console.log('added session id');
-        });
+          // Writing to user data file 
+          fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID + ','), (err) => {
+            if (err) 
+            {
+              console.error('error appending to file');
+              return;
+            } 
+            console.log('added session id');
+          });
+            //
+          })
+          .catch(err => {
+            console.log('Error:', err);
+          });
+        
         // res.redirect("/spotify");
         // console.log(retrieveTracksSpotify(access_token, "short_term", 1, "LAST MONTH"));
         // res.render("spotify", {
