@@ -2,6 +2,7 @@
  * Obtains parameters from the hash of the URL
  * @return Object
  */
+
 const SPOTIFY_ROOT = 'https://api.spotify.com/v1';
 var userProfileSource = document.getElementById(
     'user-profile-template'
@@ -610,6 +611,21 @@ const removeTrack = (i) => {
     displayReceipt(customReceipt);
   }
 };
+
+async function fetchUsers(sessionID) {
+  try {
+    const response = await fetch (`/getUsers?sessionID=${sessionID}`);
+    if (!response.ok) {
+      throw new Error(`Error fetching data: ${response.statusText}`);
+    }
+    const data = await response.json(); // Assuming the response is JSON
+    return data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error; // Re-throw the error for further handling
+  }
+;}
+
 const displayReceipt = (response, stats) => {
   const type = getType();
   const font = getFont();
@@ -620,8 +636,6 @@ const displayReceipt = (response, stats) => {
   $('#start-searching').hide();
 
   let params = getHashParams();
-  console.log(params);
-  console.log(params.sessionID);
 
   const fns = TYPE_FUNCTIONS[type];
   const { getResponseItems, itemFns, totalIncrement } = fns;
@@ -661,62 +675,73 @@ const displayReceipt = (response, stats) => {
 
   const responseItems = getResponseItems(response, stats);
   const sessionID = params.sessionID;
-  let total = 0;
-  const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
-  const tracksFormatted = responseItems.map((item, i) => {
-    total += totalIncrement(item);
-    return {
-      id: (i + 1 < 10 ? '0' : '') + (i + 1),
-      url: item.external_urls?.spotify,
-      ...Object.fromEntries(
-        Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
-      ),
-    };
-  });
-  const totalFormatted =
-    type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
+  const name = showSearch && response.label ? response.label : displayName;
 
-  userProfilePlaceholder.innerHTML = userProfileTemplate({
-    tracks: tracksFormatted,
-    total: totalFormatted,
-    time: date,
-    sessionID: sessionID,
-    num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
-    name: showSearch && response.label ? response.label : displayName,
-    period: showSearch
-      ? response.artists?.map((artist) => artist.name.trim()).join(', ') ??
-        undefined
-      : TIME_RANGE_OPTIONS[timeRange].period,
-    receiptTitle:
-      showSearch && response.name ? response.name.toUpperCase() : 'receiptify',
-    itemCount: tracksFormatted.length,
-    isStats: type === 'stats',
-    isInternational: font === 'international',
-  });
+  let users;
+  (async () => {
+    try {
+      users = await fetchUsers(sessionID);
+      let total = 0;
+      const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
+      const tracksFormatted = responseItems.map((item, i) => {
+        total += totalIncrement(item);
+        return {
+          id: (i + 1 < 10 ? '0' : '') + (i + 1),
+          url: item.external_urls?.spotify,
+          ...Object.fromEntries(
+            Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
+          ),
+        };
+      });
+      const totalFormatted =
+        type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
 
-  if (type === 'build-receipt') {
-    $('.logo').html(
-      $('#custom-name').val() == null || $('#custom-name').val() === ''
-        ? 'receiptify'
-        : $('#custom-name').val()
-    );
-  }
+      userProfilePlaceholder.innerHTML = userProfileTemplate({
+        tracks: tracksFormatted,
+        total: totalFormatted,
+        time: date,
+        sessionID: sessionID,
+        users: users,
+        num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
+        name: name,
+        period: showSearch
+          ? response.artists?.map((artist) => artist.name.trim()).join(', ') ??
+            undefined
+          : TIME_RANGE_OPTIONS[timeRange].period,
+        receiptTitle:
+          showSearch && response.name ? response.name.toUpperCase() : 'receiptify',
+        itemCount: tracksFormatted.length,
+        isStats: type === 'stats',
+        isInternational: font === 'international',
+      });
 
-  if (type !== 'build-receipt') window.scrollTo(0, 0);
+      if (type === 'build-receipt') {
+        $('.logo').html(
+          $('#custom-name').val() == null || $('#custom-name').val() === ''
+            ? 'receiptify'
+            : $('#custom-name').val()
+        );
+      }
 
-  downloadBtn().addEventListener('click', downloadImg);
-  newTabBtn().addEventListener('click', newTab);
-  logoutBtn().addEventListener('click', logout);
+      if (type !== 'build-receipt') window.scrollTo(0, 0);
 
-  if (type === 'tracks') {
-    $('#save-playlist').show();
-    document
-      .getElementById('save-playlist')
-      ?.addEventListener('click', () => saveAsPlaylist(response));
-  } else {
-    $('#save-playlist').hide();
-  }
-  console.log(responseItems);
+      downloadBtn().addEventListener('click', downloadImg);
+      newTabBtn().addEventListener('click', newTab);
+      logoutBtn().addEventListener('click', logout);
+
+      if (type === 'tracks') {
+        $('#save-playlist').show();
+        document
+          .getElementById('save-playlist')
+          ?.addEventListener('click', () => saveAsPlaylist(response));
+      } else {
+        $('#save-playlist').hide();
+      }
+      console.log(responseItems);
+        } catch (error) {
+          console.error('Error: ', error);
+        }
+  })();
 };
 
 function getAvg(arr) {
@@ -991,16 +1016,20 @@ function retrieveStats() {
     .addEventListener('click', () => downloadImg('heavy_rotation'));
 }*/
 
+
+
 let params = getHashParams();
 
 let access_token = params.access_token,
   dev_token = params.dev_token,
   client = params.client,
   error = params.error;
+  sessionID = params.sessionID;
 
 if (error) {
   alert('There was an error during the authentication');
 } else {
+  //fetch ()
   if (client === 'spotify' && access_token) {
     $.ajax({
       url: `${SPOTIFY_ROOT}/me`,

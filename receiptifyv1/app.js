@@ -1,4 +1,5 @@
 const os = require('os');
+const readline = require('readline');
 
 /**
  * This is an example of a basic node.js script that performs
@@ -95,12 +96,12 @@ app
 
 app.use((req, res, next) => {
   const ipAddress = req.socket.remoteAddress;
-  const sessionID = req.query.sessionID;
   console.log(`Incoming Connection: ${ipAddress}`);
   next();
 })
 
 app.get('/login', function (req, res) {
+  console.log('/login');
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
   // your application requests authorization
@@ -121,27 +122,13 @@ app.get('/login', function (req, res) {
 
 });
 
-
-app.get('/session', function (req, res){
-  const sessionID = req.query.sessionID;
-  console.log("Connection Attempting to Join Session: " + sessionID)
-  res.sendFile(__dirname + '/public/session.html', {sessionID: sessionID});
-});
-
-//app.get('/login', function (req, res) {
- // console.log("it be working");
-//});
-
-// how do i find all users currently in the session right now
-// instead of making it live, add as we go, but show status of the user.
-// when a logging in track spotify user id (user authentication) 
-
 app.get('/join', function (req, res){
+  console.log('/join');
   res.sendFile(__dirname + '/public/join.html')
 });
 
 app.get('/submit', function (req, res){
-  console.log(`/submit SessionID: ${req.query.sessionID}`);
+  console.log('/submit');
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
   sessionIDString = 'sessionID'
@@ -163,7 +150,7 @@ app.get('/submit', function (req, res){
       })
   );
 
-
+})
 /*app.get('/applemusic', function (req, res) {
   const token = jwt.sign({}, privateKey, {
     algorithm: 'ES256',
@@ -209,6 +196,35 @@ async function fetchProfile(token) {
   return await result.json();
 }
 
+app.get('/getUsers', async (req, res) =>{
+  const sessionID = req.query.sessionID;
+  users = await processFile('users.csv', sessionID);
+  res.json(users);
+});
+
+async function processFile(filePath, sessionID) {
+  try {
+    const fileStream = fs.createReadStream(filePath);
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+    const users = [];
+    for await (const line of rl) {
+      const row = line.split(',');
+      if (row[2] == sessionID) {
+        users.push(row[0]);
+      }
+    }
+    await rl.close();
+
+    return users;
+  } catch (error) {
+    console.error('Error Processing File: ', error);
+    throw error;
+  }
+}
+
 app.get('/callback', function (req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
@@ -217,7 +233,6 @@ app.get('/callback', function (req, res) {
   if (req.cookies[sessionIDString] != null){
     sessionID = req.cookies[sessionIDString];
   }
-  console.log(`/callback sessionID: ` + sessionID);
 
   var code = req.query.code || null;
   var state = req.query.state || null;
@@ -254,28 +269,28 @@ app.get('/callback', function (req, res) {
         access_token = body.access_token;
         var access_token = body.access_token,
           refresh_token = body.refresh_token;
+        const profile = await fetchProfile(access_token);
         res.redirect(
           '/#' +
             querystring.stringify({
               client: 'spotify',
               access_token: access_token,
               refresh_token: refresh_token,
-              sessionID: sessionID // add the session ID
+              sessionID: sessionID
             })
         );
-      
-        const profile = await fetchProfile(access_token);
-        console.log(profile.display_name);   
-
-        // Writing to user data file 
-        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID), (err) => {
+        
+        // Writing to users.csv (Database)
+        fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID + ','), (err) => {
           if (err) 
           {
-            console.error('error appending to file');
+            console.error('Error: Could not write to database.');
             return;
           } 
-          console.log('added session id');
         });
+
+
+        
         // res.redirect("/spotify");
         // console.log(retrieveTracksSpotify(access_token, "short_term", 1, "LAST MONTH"));
         // res.render("spotify", {
@@ -289,13 +304,11 @@ app.get('/callback', function (req, res) {
 
     });
   }
-  
-
-
 });
 
 app.get('/refresh_token', function (req, res) {
   // requesting access token from refresh token
+  console.log("/refresh_token");
   var refresh_token = req.query.refresh_token;
   var authOptions = {
     url: 'https://accounts.spotify.com/api/token',
@@ -333,5 +346,4 @@ app.listen(process.env.PORT || 3000, function () {
   console.log(`Server is running on ${serverIP}:3000`);
 
 });
-
 
