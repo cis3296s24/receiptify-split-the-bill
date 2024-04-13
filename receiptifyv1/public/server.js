@@ -627,6 +627,10 @@ async function fetchUsers(sessionID) {
 ;}
 
 function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked) {
+  if (users_checkbox.includes(null)){
+    console.log('true null');
+    users_checkbox.shift();
+  }
   console.log("onclick redisplay");
   if (!isChecked){
     console.log(`Before: ${users_checkbox}`);
@@ -643,6 +647,7 @@ function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked)
   }
   if (users_checkbox.length == 0){
     users_checkbox.push(null);
+    console.log(users_checkbox);
   }
   displayReceipt(response, stats, state, users_checkbox);
 ;}
@@ -728,6 +733,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
         userCheckbox.appendChild(userCheckboxTitle);
         for (let i = 0; i < users.length; i++) {
           const user = users[i];
+          console.log(user);
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
           checkbox.id = `user${i}`;
