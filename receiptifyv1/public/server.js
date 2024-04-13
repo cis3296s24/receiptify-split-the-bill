@@ -626,7 +626,29 @@ async function fetchUsers(sessionID) {
   }
 ;}
 
-const displayReceipt = (response, stats) => {
+function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked) {
+  console.log("onclick redisplay");
+  if (!isChecked){
+    console.log(`Before: ${users_checkbox}`);
+    for (let i = 0; i < users_checkbox.length; i++) {
+      if (users_checkbox[i] == user){
+        users_checkbox.splice(i, 1);
+      }
+    }
+    console.log(`After: ${users_checkbox}`);
+  } else {
+    console.log(`Before: ${users_checkbox}`);
+    users_checkbox.push(user);
+    console.log(`After: ${users_checkbox}`);
+  }
+  if (users_checkbox.length == 0){
+    users_checkbox.push(null);
+  }
+  displayReceipt(response, stats, state, users_checkbox);
+;}
+
+const displayReceipt = (response, stats, state, users_checkbox = []) => {
+  console.log(state, users_checkbox);
   const type = getType();
   const font = getFont();
   const timeRange = getPeriod();
@@ -677,7 +699,7 @@ const displayReceipt = (response, stats) => {
   const sessionID = params.sessionID;
   const name = showSearch && response.label ? response.label : displayName;
 
-  let users;
+  let users = [];
   (async () => {
     try {
       users = await fetchUsers(sessionID);
@@ -696,32 +718,44 @@ const displayReceipt = (response, stats) => {
       const totalFormatted =
         type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
       
-      //const users= ['User 1', 'User 2', 'User 3'];
-      // users is alr used, use something else
-      const userCheckbox = document.getElementById('user-checkbox');
-      
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `user${i}`;
+
+      if (users_checkbox.length == 0){
+        console.log("No Previous users_checkbox");
+        users_checkbox = [...users];
+        const userCheckbox = document.getElementById('user-checkbox');
         const userCheckboxTitle = document.createElement('p');
         userCheckboxTitle.textContent = "Select Users";
-        const label = document.createElement('label');
-        label.textContent = user;
-        label.htmlFor = checkbox.id;
         userCheckbox.appendChild(userCheckboxTitle);
-        userCheckbox.appendChild(checkbox);
-        userCheckbox.appendChild(label);
-        userCheckbox.appendChild(document.createElement('br'));
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `user${i}`;
+          checkbox.checked = (users_checkbox.includes(users[i]));
+          checkbox.onclick = (event) =>{
+            const isChecked = event.target.checked;
+            checkboxUpdate(response, stats, state, users_checkbox, users[i], isChecked);
+          }
+
+          const label = document.createElement('label');
+          label.textContent = user;
+          label.htmlFor = checkbox.id;
+          
+          userCheckbox.appendChild(checkbox);
+          userCheckbox.appendChild(label);
+          userCheckbox.appendChild(document.createElement('br'));
+        }
+      } else {
+        console.log("Previous users_checkbox");
       }
+
 
       userProfilePlaceholder.innerHTML = userProfileTemplate({
         tracks: tracksFormatted,
         total: totalFormatted,
         time: date,
         sessionID: sessionID,
-        users: users,
+        users: users_checkbox,
         num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
         name: name,
         period: showSearch
@@ -826,6 +860,7 @@ function displayStats(response, artists, tracks) {
           duration_ms: stats[key],
         };
       });
+      console.log("1");
       displayReceipt(response, statsArr);
     },
   });
@@ -939,8 +974,8 @@ function retrieveItems() {
             },
             success: (response2) => {
               displayReceipt({
-                ...response,
-                items: [...response.items, ...response2.items],
+                 ...response,
+                items: [...response.items, ...response2.items]
               });
             },
           });
