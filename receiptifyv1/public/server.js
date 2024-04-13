@@ -653,6 +653,7 @@ function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked)
 ;}
 
 const displayReceipt = (response, stats, state, users_checkbox = []) => {
+  const scrollPosition = window.scrollY;
   console.log(state, users_checkbox);
   const type = getType();
   const font = getFont();
@@ -801,6 +802,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
         } catch (error) {
           console.error('Error: ', error);
         }
+  window.scrollTo(0, scrollPosition);
   })();
 };
 
