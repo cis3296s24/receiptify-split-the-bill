@@ -612,9 +612,9 @@ const removeTrack = (i) => {
   }
 };
 
-async function fetchUsers(sessionID) {
+async function fetchUsers(sessionID, type) {
   try {
-    const response = await fetch (`/getUsers?sessionID=${sessionID}`);
+    const response = await fetch (`/getUsers?sessionID=${sessionID}&type=${type}`);
     if (!response.ok) {
       throw new Error(`Error fetching data: ${response.statusText}`);
     }
@@ -625,6 +625,7 @@ async function fetchUsers(sessionID) {
     throw error; // Re-throw the error for further handling
   }
 ;}
+
 
 function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked) {
   if (users_checkbox.includes(null)){
@@ -708,7 +709,12 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
   let users = [];
   (async () => {
     try {
-      users = await fetchUsers(sessionID);
+      users = await fetchUsers(sessionID, 'display_name');
+      console.log('Fetched Users');
+      tokens = await fetchUsers(sessionID, 'access_token');
+      console.log(`Fetched Tokens: ${tokens}`);
+
+      console.log(tokens);
       let total = 0;
       const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
       const tracksFormatted = responseItems.map((item, i) => {
