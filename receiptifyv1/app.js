@@ -27,8 +27,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const client_id = '82641df2811b48b493da744446b6b90f';
-const client_secret = 'e48944809f164d768c38ca1e9d850021';
+const client_id = '792207d6524f4255a1730e478d8b66f6';
+const client_secret = 'fd5c90696d984ca7a65a54853f340c70';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -197,12 +197,27 @@ async function fetchProfile(token) {
 }
 
 app.get('/getUsers', async (req, res) =>{
+  console.log('/getUsers');
   const sessionID = req.query.sessionID;
-  users = await processFile('users.csv', sessionID);
+  const type = req.query.type;
+  let col;
+  //console.log(`Type: ${type}`);
+  if (type === 'display_name')
+  {
+    console.log('Column: display_name');
+    col = 0; 
+  }
+  else if (type === 'access_token')
+  {
+    console.log('Column: access_token');
+    col = 1;
+  }
+  users = await processFile('users.csv', sessionID, col);
+  console.log(users[0]);
   res.json(users);
 });
 
-async function processFile(filePath, sessionID) {
+async function processFile(filePath, sessionID, col) {
   try {
     const fileStream = fs.createReadStream(filePath);
     const rl = readline.createInterface({
@@ -213,7 +228,7 @@ async function processFile(filePath, sessionID) {
     for await (const line of rl) {
       const row = line.split(',');
       if (row[2] == sessionID) {
-        users.push(row[0]);
+        users.push(row[col]);
       }
     }
     await rl.close();
