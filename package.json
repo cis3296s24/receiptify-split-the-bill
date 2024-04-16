@@ -1,0 +1,14 @@
+{
+  "name": "receiptify-split-the-bill",
+  "version": "1.0.0",
+  "description": "Receiptify: Split the Bill is inspired by the original Receiptify, a web application that generates receipts that lists out a user's top tracks in the past, month, 6 months, and all time. Our version of receiptify generates receipts based on a group of users in a session. Our application generates a combined music receipt that displays a compiled list of all users' top tracks in the past, month, 6 months, and all time.",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.43.1",
+    "@types/node": "^20.12.7"
+  }
+}
