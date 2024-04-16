@@ -634,7 +634,7 @@ async function fetchUsers(sessionID, type) {
 
 
 function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked) {
-  if (users_checkbox.includes(null)){
+  if (users_checkbox.map(obj => obj.user).includes(null) || users_checkbox.map(obj => obj.token.includes(null))){
     console.log('true null');
     users_checkbox.shift();
   }
@@ -642,7 +642,7 @@ function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked)
   if (!isChecked){
     console.log(`Before: ${users_checkbox}`);
     for (let i = 0; i < users_checkbox.length; i++) {
-      if (users_checkbox[i] == user){
+      if (users_checkbox.map(obj => obj.user)[i] == user){
         users_checkbox.splice(i, 1);
       }
     }
@@ -653,8 +653,8 @@ function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked)
     console.log(`After: ${users_checkbox}`);
   }
   if (users_checkbox.length == 0){
-    users_checkbox.push(null);
-    console.log(users_checkbox);
+    users_checkbox.push({user: null, token: null});
+    console.log('pushed null: ', users_checkbox);
   }
   retrieveItems(stats, state);
 ;}
@@ -752,6 +752,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
       if (users_checkbox.length == 0){
         console.log("No Previous users_checkbox");
         users_checkbox = [...users];
+        // users_checkbox = users.map((user, index) => ({ user, token: tokens[index]}));
         const userCheckbox = document.getElementById('user-checkbox');
         userCheckbox.innerHTML = "";
         const userCheckboxTitle = document.createElement('p');
@@ -765,6 +766,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
           checkbox.type = 'checkbox';
           checkbox.id = tokens[i];
           checkbox.checked = (users_checkbox.includes(users[i]));
+          // checkbox.checked = users_checkbox.map(obj => obj.user).includes(users[i])
           checkbox.onclick = (event) =>{
             const isChecked = event.target.checked;
             checkboxUpdate(response, stats, state, users_checkbox, users[i], isChecked);
@@ -791,6 +793,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
         time: date,
         sessionID: sessionID,
         users: users_checkbox,
+        // users: users_checkbox.map(obj => obj.token),
         num: showSearch ? 1 : TIME_RANGE_OPTIONS[timeRange].num,
         name: name,
         period: showSearch
@@ -976,7 +979,7 @@ function retrieveItems(stats, state) {
   (async () => {
     try {
       tokens = await fetchUsers(sessionID, 'access_token');
-      console.log('Fetched Tokens', tokens);
+      //console.log('Fetched Tokens', tokens);
       $('#search-form').hide();
       $('#custom-name').hide();
       $('#options').show();
@@ -996,7 +999,7 @@ function retrieveItems(stats, state) {
       if (type === 'artists' || type === 'tracks') {
         $('#num-options').show();
         $('#num-header').show();
-        console.log('artists & tracks add headers');
+        //console.log('artists & tracks add headers');
         if (getNum() === 'fifty') {
           num = 50;
         }
@@ -1081,7 +1084,7 @@ function retrieveItems(stats, state) {
         //console.log(item);
       } //else { // shows tracks
         else if(type === 'tracks'){
-        console.log('ajax call else');
+        //console.log('ajax call else');
         $.ajax({
           url: `${SPOTIFY_ROOT}/me/top/${
             selectedType ?? 'tracks'
