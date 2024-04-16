@@ -150,7 +150,7 @@ const getNameUpper = (item) => {
 const getArtists = (item) =>
   item.artists.map((artist) => {
     const processedName = wrapNonAlphanumericChars(artist.name.trim().toUpperCase());
-    console.log("Processed Artist Name:", processedName); // Log inside the callback
+    //console.log("Processed Artist Name:", processedName); // Log inside the callback
     return processedName;
   });
 const getDurationUnformatted = (item) => parseFloat(`${item.duration_ms}`);
@@ -336,6 +336,10 @@ const getPeriod = () => {
     'short_term'
   );
 };
+
+const getUsersCheckbox = () => {
+  return document.querySelectorAll('input[name="user-select-checkbox"]:checked');
+}
 
 const getNum = () => {
   return (
@@ -652,30 +656,14 @@ function checkboxUpdate(response, stats, state, users_checkbox, user, isChecked)
     users_checkbox.push(null);
     console.log(users_checkbox);
   }
-  displayReceipt(response, stats, state, users_checkbox);
+  retrieveItems(stats, state);
 ;}
 
-function getArtistsTest(access_tokens) {
-  const timeRangeSlug = "short_term";
-  const limit = 50;
-  for (var i=0; i < access_tokens.length; i++) {
-    $.ajax({
-      url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`,
-      headers: {Authorization: 'Bearer ' + access_tokens[i],},
-      success: (response) => {
-        const artists = response?.items;
-        console.log("Top Artists: ", artists);
-      },
-      error: function(error) {
-        console.error("Error: ", error);
-      }
-    })
-  }
-}
 
 const displayReceipt = (response, stats, state, users_checkbox = []) => {
+  console.log(response, stats, state, users_checkbox);
   const scrollPosition = window.scrollY;
-  console.log('statae & checkbox',state, users_checkbox);
+  //console.log('state & checkbox',state, users_checkbox);
   const type = getType();
   const font = getFont();
   const timeRange = getPeriod();
@@ -686,14 +674,14 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
   let params = getHashParams();
 
-  console.log('response: ', response);
+  //console.log('response: ', response);
 
 
   const fns = TYPE_FUNCTIONS[type];
   const { getResponseItems, itemFns, totalIncrement } = fns;
 
-  console.log(response, stats);
-  console.log(getResponseItems, itemFns, totalIncrement);
+  //console.log(response, stats);
+  //console.log(getResponseItems, itemFns, totalIncrement);
 
   if (type === 'build-receipt') {
     $('#track-edit').show();
@@ -728,7 +716,10 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
     $('#explanation').hide();
   }
 
+
   const responseItems = getResponseItems(response, stats);
+  console.log('responses & stats: ', response, stats);
+  console.log('Response Items DisplayReceipt(): ', responseItems);
   const sessionID = params.sessionID;
   const name = showSearch && response.label ? response.label : displayName;
 
@@ -736,16 +727,16 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
   (async () => {
     try {
       users = await fetchUsers(sessionID, 'display_name');
-      console.log('Fetched Users');
+      //console.log('Fetched Users', users);
       tokens = await fetchUsers(sessionID, 'access_token');
-      console.log(`Fetched Tokens: ${tokens}`);
+      //console.log(`Fetched Tokens: ${tokens}`);
 
-      console.log(tokens);
+      //console.log(tokens);
       let total = 0;
       const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
       const tracksFormatted = responseItems.map((item, i) => {
         total += totalIncrement(item);
-        console.log(item);
+        //console.log(item);
         return {
           id: (i + 1 < 10 ? '0' : '') + (i + 1),
           url: item.external_urls?.spotify,
@@ -768,10 +759,11 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
         userCheckbox.appendChild(userCheckboxTitle);
         for (let i = 0; i < users.length; i++) {
           const user = users[i];
-          console.log(user);
+          //console.log(user);
           const checkbox = document.createElement('input');
+          checkbox.name = 'user-select-checkbox';
           checkbox.type = 'checkbox';
-          checkbox.id = `user${i}`;
+          checkbox.id = tokens[i];
           checkbox.checked = (users_checkbox.includes(users[i]));
           checkbox.onclick = (event) =>{
             const isChecked = event.target.checked;
@@ -789,6 +781,8 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
       } else {
         console.log("Previous users_checkbox");
       }
+
+      
 
 
       userProfilePlaceholder.innerHTML = userProfileTemplate({
@@ -834,10 +828,9 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
         console.log('other types');
         $('#save-playlist').hide();
       }
-      console.log(responseItems);
-        } catch (error) {
-          console.error('Error: ', error);
-        }
+    } catch (error) {
+      console.error('Error: ', error);
+    }
   window.scrollTo(0, scrollPosition);
   })();
 };
@@ -904,7 +897,6 @@ function displayStats(response, artists, tracks) {
           duration_ms: stats[key],
         };
       });
-      console.log("1");
       displayReceipt(response, statsArr);
     },
   });
@@ -972,79 +964,141 @@ async function nRecentlyPlayed(n, music) {
   return recentlyPlayedSongs.flat();
 }
 
-function retrieveItems() {
-  $('#search-form').hide();
-  $('#custom-name').hide();
-  $('#options').show();
-  $('#options-header').show();
+function shuffleArray(array){
+  return [...array].sort(() => Math.random() - 0.5);
+}
 
-  const type = getType();
-  if (type === 'show-search' || type === 'build-receipt') {
-    initSearch();
-    return;
-  }
-  if (type === 'stats') { // shows stats
-    retrieveStats();
-    return;
-  }
-  let num = 10;
+function retrieveItems(stats, state) {
 
-  if (type === 'artists' || type === 'tracks') {
-    $('#num-options').show();
-    $('#num-header').show();
-    console.log('artists & tracks add headers');
-    if (getNum() === 'fifty') {
-      num = 50;
-    }
-  } else {
-    $('#num-options').hide();
-    $('#num-header').hide();
-  }
-  const selectedType = type === 'genres' ? 'artists' : type;
-  const timeRangeSlug = getPeriod();
-  const limit = num;
+  console.log(getUsersCheckbox());
+  users_checkbox = getUsersCheckbox();
 
-  if (type === 'artists') {
-    console.log('artists here');
-  }
-  
-  if (type === 'genres') {
-    console.log("genres")
-    $.ajax({
-      url: `${SPOTIFY_ROOT}/me/top/artists?limit=49&time_range=${timeRangeSlug}`,
-      headers: {
-        Authorization: 'Bearer ' + access_token,
-      },
-      success: (response) => {
-        if (response.next != null) {
-          $.ajax({
-            url: response.next,
-            headers: {
-              Authorization: 'Bearer ' + access_token,
-            },
-            success: (response2) => {
-              console.log('here');
-              displayReceipt({
-                 ...response,
-                items: [...response.items, ...response2.items]
-              });
-            },
-          });
+  (async () => {
+    try {
+      tokens = await fetchUsers(sessionID, 'access_token');
+      console.log('Fetched Tokens', tokens);
+      $('#search-form').hide();
+      $('#custom-name').hide();
+      $('#options').show();
+      $('#options-header').show();
+    
+      const type = getType();
+      if (type === 'show-search' || type === 'build-receipt') {
+        initSearch();
+        return;
+      }
+      if (type === 'stats') { // shows stats
+        retrieveStats();
+        return;
+      }
+      let num = 10;
+    
+      if (type === 'artists' || type === 'tracks') {
+        $('#num-options').show();
+        $('#num-header').show();
+        console.log('artists & tracks add headers');
+        if (getNum() === 'fifty') {
+          num = 50;
         }
-      },
-    });
-    //console.log(item);
-  } else { // shows tracks
-    $.ajax({
-      url: `${SPOTIFY_ROOT}/me/top/${
-        selectedType ?? 'tracks'
-      }?limit=${limit}&time_range=${timeRangeSlug}`,
-      headers: {
-        Authorization: 'Bearer ' + access_token,
-      },
-      success: displayReceipt,
-    });
-  }
+      } else {
+        $('#num-options').hide();
+        $('#num-header').hide();
+      }
+      const selectedType = type === 'genres' ? 'artists' : type;
+      const timeRangeSlug = getPeriod();
+      const limit = num;
+    
+      if ( type === 'artists') {
+        const promises = [];
+        let combined = [];
+        const timeRangeSlug = "short_term";
+        for (var i = 0; i < users_checkbox.length; i++) {
+          const promise = new Promise((resolve, reject) => {
+            $.ajax({
+              url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`, 
+              headers: {
+                Authorization: 'Bearer ' + users_checkbox[i].id,
+              },
+              success: (response) => {
+                resolve(response?.items);
+
+                const artists = response?.items;
+                console.log("Top Artists: ", artists);
+                combined = combined.concat(artists);
+                console.log('Concat: ', combined);
+              },
+              error: function(error) {
+                reject(error);
+                console.error("Error: ", error);
+              }
+            })
+          })
+          promises.push(promise);
+        }
+        Promise.all(promises).then((artistData) => {
+          const combined = [].concat(...artistData); // Combine all artists data
+          console.log('concat final: ', combined);
+          const shuffledCombined = shuffleArray(combined); 
+          console.log('shuffled: ', shuffledCombined)
+          // Shuffle the combined data
+          shuffledCombined.splice(num);
+          console.log('spliced: ', shuffledCombined);
+          response_edited = {
+            items: shuffledCombined
+          }
+          displayReceipt(response_edited, stats, state, users_checkbox);
+          //return response_edited;
+        })
+        .catch((errors) => {
+          console.error('Errors:', errors); // Handle any errors
+        });
+      }
+      
+      if (type === 'genres') {
+        $.ajax({
+          url: `${SPOTIFY_ROOT}/me/top/artists?limit=49&time_range=${timeRangeSlug}`,
+          headers: {
+            Authorization: 'Bearer ' + access_token,
+          },
+          success: (response) => {
+            if (response.next != null) {
+              $.ajax({
+                url: response.next,
+                headers: {
+                  Authorization: 'Bearer ' + access_token,
+                },
+                success: (response2) => {
+                  console.log('GENRE');
+                  displayReceipt({
+                     ...response,
+                    items: [...response.items, ...response2.items]
+                  });
+                },
+              });
+            }
+          },
+        });
+        //console.log(item);
+      } //else { // shows tracks
+        else if(type === 'tracks'){
+        console.log('ajax call else');
+        $.ajax({
+          url: `${SPOTIFY_ROOT}/me/top/${
+            selectedType ?? 'tracks'
+          }?limit=${limit}&time_range=${timeRangeSlug}`,
+          headers: {
+            Authorization: 'Bearer ' + access_token,
+          },
+          success: displayReceipt,
+        });
+      }
+    } catch (error) {
+      console.error('Error: ', error);
+    }
+  })();
+
+
+
 }
 
 function retrieveStats() {
@@ -1132,6 +1186,8 @@ let access_token = params.access_token,
   error = params.error;
   sessionID = params.sessionID;
 
+
+
 if (error) {
   alert('There was an error during the authentication');
 } else {
@@ -1147,6 +1203,7 @@ if (error) {
         username = response.id;
         showReceipt();
         retrieveItems();
+        
       },
     });
   } else if (client === 'applemusic' && dev_token) {
@@ -1190,7 +1247,6 @@ if (error) {
   document
     .getElementById('type-select-dropdown')
     .addEventListener('change', retrieveItems);
-  console.log('111');
 }
 
 document
