@@ -784,7 +784,7 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
       
 
-
+      console.log(sessionID);
       userProfilePlaceholder.innerHTML = userProfileTemplate({
         tracks: tracksFormatted,
         total: totalFormatted,
