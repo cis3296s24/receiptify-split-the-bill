@@ -5,3 +5,4 @@ var objectsArray = users.map((user, index) => ({ user, token: tokens[index]}));
 
 console.log(objectsArray);
 console.log(objectsArray.map(obj => obj.token).includes('token3'));
+console.log(objectsArray[0].user);
