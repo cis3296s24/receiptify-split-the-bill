@@ -45,6 +45,7 @@ A user on the same network the app is hosted on can put the host's IP and port n
 
 The first person will click the "Create Session" button and log into their Spotify account. A Session ID will appear on the top of their receipt.
 
-Other users can then click "Join Session" and after entering the shared Session ID, they can log into their Spotify accounts and view the receipt.
+Other users can then click "Join Session" and after entering the shared Session ID, they can log into their Spotify accounts and view the receipt. After refreshing the page, checkboxes will appear next to each joined user's name indicating which Spotify accounts data will be included. (CURRENTLY ONLY WORKS FOR TOP ARTISTS)
 
 
+<img width="764" alt="Screenshot 2024-04-17 at 9 45 04 AM" src="https://github.com/cis3296s24/receiptify-split-the-bill/assets/143619402/f9875fce-31c0-4877-b5a8-0a2dc279ef25">
