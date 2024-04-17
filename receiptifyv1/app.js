@@ -80,6 +80,25 @@ var generateSessionID = function () {
   for (var i = 0; i < 6; i++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
+  const fileStream = fs.createReadStream("users.csv");
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
+  rl.on('line', (line) => {
+    const row = line.split(',');
+    if (row[2] == text) {
+      text = generateSessionID();
+    }
+  }); 
+  /*
+  for await (const line of rl) {
+    const row = line.split(',');
+    if (row[2] == text) {
+      text = generateSessionID();
+    }
+  }
+  */
   return text;
 };
 
@@ -225,12 +244,29 @@ async function processFile(filePath, sessionID, col) {
       crlfDelay: Infinity,
     });
     const users = [];
+    var newDB = "";
+    var first = true;
     for await (const line of rl) {
+      if(first){
+        newDB += line + "\n";
+        first = false;
+        continue;
+      }
       const row = line.split(',');
       if (row[2] == sessionID) {
         users.push(row[col]);
       }
+      if((row[3] - 1 + 3600000 > Date.now())){
+        newDB += line + "\n";
+      };
     }
+    fs.writeFile("users.csv", newDB, err => {
+      if (err) {
+        console.log(err.message);
+    
+        throw err;
+      }
+  });
     await rl.close();
 
     return users;
@@ -296,10 +332,8 @@ app.get('/callback', function (req, res) {
         );
         
         // Gets time (year-month-day hour:min:sec)
-        var currentDate = new Date();
-        var access_time = currentDate.getFullYear() + '-' + (currentDate.getMonth()+1) + '-' + currentDate.getDate() + ' ' + 
-          currentDate.getHours() + ':' + currentDate.getMinutes() + ':' + currentDate.getSeconds();
-        console.log("Token Access Time: ", access_time);
+        console.log(Date.now());
+        var access_time = Date.now();
         
         // Writing to users.csv (Database)
         fs.appendFile('users.csv', ('\n'+ profile.display_name + ',' + access_token +',' + sessionID + ','  + access_time + ','), (err) => {
