@@ -27,8 +27,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const client_id = '035844db2ccb4d0698ab8e14bb12f27a';
-const client_secret = '8bfd5a9fa7a44aedbf8bf8f513236b4f';
+const client_id = '792207d6524f4255a1730e478d8b66f6';
+const client_secret = 'fd5c90696d984ca7a65a54853f340c70';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -146,28 +146,40 @@ app.get('/join', function (req, res){
   res.sendFile(__dirname + '/public/join.html')
 });
 
-app.get('/submit', function (req, res){
+app.get('/submit', async function (req, res){
   console.log('/submit');
+  let sessionUsers;
   var state = generateRandomString(16);
   res.cookie(stateKey, state);
   sessionIDString = 'sessionID'
   res.cookie(sessionIDString, req.query.sessionID);
-  // your application requests authorization
-  // user-read-private & user-read-email used to get current user info
-  // user-top-read used to get top track info
-  var scope =
-    'user-read-private user-read-email user-top-read playlist-modify-public';
-  res.set('sessionID', req.query.sessionID);
-  res.redirect(
-    'https://accounts.spotify.com/authorize?' +
-      querystring.stringify({
-        response_type: 'code',
-        client_id: client_id,
-        scope: scope,
-        redirect_uri: redirect_uri,
-        state: state,
-      })
-  );
+  sessionUsers = await processFile('users.csv', req.query.sessionID, 1);
+  console.log(`Session users length: ${sessionUsers.length}`);
+  
+  if (sessionUsers.length === 0)
+  {
+    // TODO: add message or pop up asking user to resubmit (right now code just stops)
+  }
+  else
+  {
+    // your application requests authorization
+    // user-read-private & user-read-email used to get current user info
+    // user-top-read used to get top track info
+    var scope =
+      'user-read-private user-read-email user-top-read playlist-modify-public';
+    res.set('sessionID', req.query.sessionID);
+    res.redirect(
+      'https://accounts.spotify.com/authorize?' +
+        querystring.stringify({
+          response_type: 'code',
+          client_id: client_id,
+          scope: scope,
+          redirect_uri: redirect_uri,
+          state: state,
+        })
+    );
+  }
+
 
 })
 /*app.get('/applemusic', function (req, res) {
@@ -214,6 +226,7 @@ async function fetchProfile(token) {
 
   return await result.json();
 }
+
 
 app.get('/getUsers', async (req, res) =>{
   console.log('/getUsers');
