@@ -1,5 +1,8 @@
-const test = (param1, param2, param3) => {
-    console.log(param1, param2, param3);
-}
-var param1="womp";
-test(param1, "stomp");
+var users = ['users1', 'users2', 'users3'];
+var tokens = ['token1', 'token2', 'token3'];
+var objectsArray = users.map((user, index) => ({ user, token: tokens[index]}));
+
+
+console.log(objectsArray);
+console.log(objectsArray.map(obj => obj.token).includes('token3'));
+console.log(objectsArray[0].user);
