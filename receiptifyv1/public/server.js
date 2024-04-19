@@ -844,10 +844,10 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
       if (type === 'tracks') {
         console.log('tracks')
-        $('#save-playlist').show();
-        document
-          .getElementById('save-playlist')
-          ?.addEventListener('click', () => saveAsPlaylist(response));
+        //$('#save-playlist').show();
+        //document
+          //.getElementById('save-playlist')
+          //?.addEventListener('click', () => saveAsPlaylist(response));
       } else {
         console.log('other types');
         $('#save-playlist').hide();
@@ -995,7 +995,7 @@ function shuffleArray(array){
 function retrieveItems(stats, state) {
 
   console.log('getUsers: ', getUsersCheckbox());
-  users_checkbox = getUsersCheckbox(); //needs to be a an array of obj
+  var users_checkbox = getUsersCheckbox(); //needs to be a an array of obj
   console.log('getUsers: ', [users_checkbox]);
 
   if (users_checkbox.length == 0){
@@ -1045,7 +1045,6 @@ function retrieveItems(stats, state) {
       if ( type === 'artists') {
         const promises = [];
         let combined = [];
-        const timeRangeSlug = "short_term";
         if (users_checkbox[0].token  == null || users_checkbox[0].user == null) {
           displayReceipt([], stats, state, users_checkbox);
         }
@@ -1054,8 +1053,7 @@ function retrieveItems(stats, state) {
             $.ajax({
               url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`, 
               headers: {
-                //Authorization: 'Bearer ' + users_checkbox[i].id,
-                Authorization: 'Bearer ' + users_checkbox[i].token //null
+                Authorization: 'Bearer ' + users_checkbox[i].token 
               },
               success: (response) => {
                 resolve(response?.items);
@@ -1077,15 +1075,14 @@ function retrieveItems(stats, state) {
           const combined = [].concat(...artistData); // Combine all artists data
           console.log('concat final: ', combined);
           const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined)
+          console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
           console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
-          }
+          };
           displayReceipt(response_edited, stats, state, users_checkbox);
-          //return response_edited;
         })
         .catch((errors) => {
           console.error('Errors:', errors); // Handle any errors
@@ -1116,10 +1113,57 @@ function retrieveItems(stats, state) {
             }
           },
         });
-        //console.log(item);
-      } //else { // shows tracks
-        else if(type === 'tracks'){
-        //console.log('ajax call else');
+      } 
+      
+      else if(type === 'tracks'){
+        /*
+        const promises = [];
+        let combined = [];
+        if (users_checkbox[0].token == null || users_checkbox[0].user == null) {
+          displayReceipt([], stats, state, users_checkbox);
+        }
+        for (var i=0; i < users_checkbox.length; i++){
+          const promise = new Promise((resolve, reject) => {
+            $.ajax({
+              url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`,
+              headers: {
+                Authorizaton: 'Bearer ' + users_checkbox[i].token,
+              },
+              sucess: (response) => {
+                resolve(response?.items);
+
+                const tracks = response?.items;
+                console.log("Top Tracks: ", tracks);
+                combined = combined.concat(tracks);
+                console.log("Concat: ", combined);
+              },
+              error: function(error) {
+                reject(error);
+                console.error("Error: ", error);
+              }
+            })
+          })
+          promises.push(promise);
+        }
+        Promise.all(promises).then((trackData) => {
+          const combined = [].concat(...trackData);
+          console.log("concat final: ", combined);
+          const shuffledCombined = shuffleArray(combined);
+          console.log("shuffled: ", shuffledCombined);
+          shuffledCombined.splice(num);
+          console.log("spliced: ", shuffledCombined);
+          response_edited = {
+            items: shuffledCombined
+          };
+          displayReceipt(response_edited, stats, state, users_checkbox);
+        })
+        .catch((errors) => {
+          console.error("Errors: ", errors);
+        });
+        */
+
+      
+        console.log(users_checkbox[0].token);
         $.ajax({
           url: `${SPOTIFY_ROOT}/me/top/${
             selectedType ?? 'tracks'
@@ -1129,6 +1173,7 @@ function retrieveItems(stats, state) {
           },
           success: displayReceipt,
         });
+        
       }
     } catch (error) {
       console.error('Error: ', error);
@@ -1240,6 +1285,7 @@ if (error) {
         displayName = response.display_name.toUpperCase();
         username = response.id;
         showReceipt();
+        console.log(1);
         retrieveItems();
         
       },
