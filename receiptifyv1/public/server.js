@@ -351,8 +351,6 @@ const getUsersCheckbox = () => {
   }
 
   var users_checkbox = users.map((user, index) =>({ user, token: tokens[index]}));
-
-  // return list of objects. list of user object with name and token.
   return users_checkbox;
 }
 
@@ -648,30 +646,6 @@ async function fetchUsers(sessionID, type) {
 ;}
 
 
-function checkboxUpdate(stats, state, users_checkbox, user, isChecked) {
-  if (users_checkbox.map(obj => obj.user).includes(null) || users_checkbox.map(obj => obj.token).includes(null)) {
-    users_checkbox.shift();
-  }
-  if (!isChecked){
-    console.log(`Before: ${users_checkbox}`);
-    for (let i = 0; i < users_checkbox.length; i++) {
-      if (users_checkbox[i].user == user){
-        users_checkbox.splice(i, 1);
-      }
-    }
-    console.log(`After: ${users_checkbox}`);
-  } else {
-    console.log(`Before: ${users_checkbox}`);
-    users_checkbox.push(user);
-    console.log(`After: ${users_checkbox}`);
-  }
-  if (users_checkbox.length == 0){
-    users_checkbox.push({user: null, token: null});
-  }
-  retrieveItems(stats, state);
-;}
-
-
 const displayReceipt = (response, stats, state, users_checkbox = []) => {
   console.log(response, stats, state, users_checkbox);
   const scrollPosition = window.scrollY;
@@ -736,53 +710,26 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
       let total = 0;
       const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
-      const tracksFormatted = responseItems.map((item, i) => {
-        total += totalIncrement(item);
-        return {
-          id: (i + 1 < 10 ? '0' : '') + (i + 1),
-          url: item.external_urls?.spotify,
-          ...Object.fromEntries(
-            Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
-          ),
-        };
-      });
-      const totalFormatted =
-        type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
-      
-
-      if (users_checkbox.length == 0){
-        console.log("No Previous users_checkbox");
-        users_checkbox = users.map((user, index) => ({ user, token: tokens[index]}));
-        
-        const userCheckbox = document.getElementById('user-checkbox');
-        userCheckbox.innerHTML = "";
-        const userCheckboxTitle = document.createElement('p');
-        userCheckboxTitle.textContent = "Select Users";
-        userCheckbox.appendChild(userCheckboxTitle);
-        for (let i = 0; i < users.length; i++) {
-          const checkbox = document.createElement('input');
-          checkbox.name = 'user-select-checkbox';
-          checkbox.type = 'checkbox';
-          checkbox.id = tokens[i];
-          checkbox.checked = users_checkbox.map(obj => obj.user).includes(users[i])
-          checkbox.onclick = (event) =>{
-            const isChecked = event.target.checked;
-            checkboxUpdate(stats, state, users_checkbox, users[i], isChecked);
-          }
-
-          const label = document.createElement('label');
-          label.textContent = users[i];
-          label.htmlFor = checkbox.id;
-          
-          userCheckbox.appendChild(checkbox);
-          userCheckbox.appendChild(label);
-          userCheckbox.appendChild(document.createElement('br'));
-        }
-      } else {
-        console.log("Previous users_checkbox");
+      var tracksFormatted = [];
+      var totalFormatted = '00:00';
+      try {
+        tracksFormatted = responseItems.map((item, i) => {
+          total += totalIncrement(item);
+          return {
+            id: (i + 1 < 10 ? '0' : '') + (i + 1),
+            url: item.external_urls?.spotify,
+            ...Object.fromEntries(
+              Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
+            ),
+          };
+        });
+        totalFormatted =
+          type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
+      } catch {
+        console.log('No Users Selected.')
       }
-      console.log(users_checkbox);
-      if (users_checkbox[0].token == null || users_checkbox[0].user == null) {
+
+      if (getUsersCheckbox() == 0 ) {
         console.log('before html: ',users_checkbox);
         console.log(sessionID);
         userProfilePlaceholder.innerHTML = userProfileTemplate({
@@ -805,8 +752,6 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
           isInternational: font === 'international',
         });
       } else {
-        console.log('before html: ',users_checkbox);
-        console.log(sessionID);
         userProfilePlaceholder.innerHTML = userProfileTemplate({
           tracks: tracksFormatted,
           total: totalFormatted,
@@ -994,22 +939,21 @@ function shuffleArray(array){
 
 function retrieveItems(stats, state) {
 
-  console.log('getUsers: ', getUsersCheckbox());
-  var users_checkbox = getUsersCheckbox(); //needs to be a an array of obj
-  console.log('getUsers: ', [users_checkbox]);
-
-  if (users_checkbox.length == 0){
-    users_checkbox.push({user: null, token: null});
-    console.log('push null retrieveItems');
-    response_edited = {
-      items: []
-    }
-    displayReceipt(response_edited, stats, state, users_checkbox);
-  }
-
   (async () => {
     try {
       tokens = await fetchUsers(sessionID, 'access_token');
+      users = await fetchUsers(sessionID, 'display_name');
+      
+      var users_checkbox = getUsersCheckbox(); 
+      console.log(users_checkbox);
+      if (users_checkbox.length == 0){
+        response_edited = {
+          items: []
+        }
+        displayReceipt(response_edited, stats, state, users_checkbox);
+      }
+      //
+
       //console.log('Fetched Tokens', tokens);
       $('#search-form').hide();
       $('#custom-name').hide();
@@ -1115,27 +1059,26 @@ function retrieveItems(stats, state) {
         });
       } 
       
-      else if(type === 'tracks'){
-        /*
+      if (type === 'tracks'){
         const promises = [];
         let combined = [];
-        if (users_checkbox[0].token == null || users_checkbox[0].user == null) {
-          displayReceipt([], stats, state, users_checkbox);
+        if (getUsersCheckbox().length == 0) {
+          displayReceipt([{items: []}], stats, state, []);
         }
-        for (var i=0; i < users_checkbox.length; i++){
+        for (var i = 0; i < users_checkbox.length; i++) {
           const promise = new Promise((resolve, reject) => {
             $.ajax({
-              url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`,
+              url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`, 
               headers: {
-                Authorizaton: 'Bearer ' + users_checkbox[i].token,
+                Authorization: 'Bearer ' + users_checkbox[i].token 
               },
-              sucess: (response) => {
+              success: (response) => {
                 resolve(response?.items);
 
                 const tracks = response?.items;
                 console.log("Top Tracks: ", tracks);
                 combined = combined.concat(tracks);
-                console.log("Concat: ", combined);
+                console.log('Concat: ', combined);
               },
               error: function(error) {
                 reject(error);
@@ -1146,23 +1089,24 @@ function retrieveItems(stats, state) {
           promises.push(promise);
         }
         Promise.all(promises).then((trackData) => {
-          const combined = [].concat(...trackData);
-          console.log("concat final: ", combined);
-          const shuffledCombined = shuffleArray(combined);
-          console.log("shuffled: ", shuffledCombined);
+          const combined = [].concat(...trackData); // Combine all artists data
+          console.log('concat final: ', combined);
+          const shuffledCombined = shuffleArray(combined); 
+          console.log('shuffled: ', shuffledCombined);
+          // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log("spliced: ", shuffledCombined);
+          console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
           };
           displayReceipt(response_edited, stats, state, users_checkbox);
         })
         .catch((errors) => {
-          console.error("Errors: ", errors);
+          console.error('Errors:', errors); // Handle any errors
         });
-        */
+        
 
-      
+        /*
         console.log(users_checkbox[0].token);
         $.ajax({
           url: `${SPOTIFY_ROOT}/me/top/${
@@ -1173,6 +1117,7 @@ function retrieveItems(stats, state) {
           },
           success: displayReceipt,
         });
+        */
         
       }
     } catch (error) {
@@ -1259,6 +1204,53 @@ function retrieveStats() {
     .addEventListener('click', () => downloadImg('heavy_rotation'));
 }*/
 
+function showCheckbox() {
+  console.log('showCheckbox()');
+
+  (async () => {
+    try {
+      const tokens = await fetchUsers(sessionID, 'access_token');
+      const users = await fetchUsers(sessionID, 'display_name');
+
+      // Combine user data with tokens (assuming tokens match user order)
+      const users_checkbox = users.map((user, index) => ({ user, token: tokens[index] }));
+
+      const userCheckbox = document.getElementById('user-checkbox');
+      userCheckbox.innerHTML = "";
+
+      const userCheckboxTitle = document.createElement('p');
+      userCheckboxTitle.textContent = "Select Users";
+      userCheckbox.appendChild(userCheckboxTitle);
+
+      for (let i = 0; i < users.length; i++) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = tokens[i]; // Use token for unique ID
+        checkbox.name = 'user-select-checkbox';
+
+        // Check if user is already selected based on users_checkbox
+        checkbox.checked = users_checkbox.map(obj => obj.user).includes(users[i]);
+
+        checkbox.onclick = (event) => {
+          const isChecked = event.target.checked;
+          retrieveItems()
+        };
+
+        const label = document.createElement('label');
+        label.textContent = users[i];
+        label.htmlFor = checkbox.id;
+
+        userCheckbox.appendChild(checkbox);
+        userCheckbox.appendChild(label);
+        userCheckbox.appendChild(document.createElement('br'));
+      }
+    } catch (error) {
+      console.error('Error: ', error);
+    }
+  })();
+}
+
+
 
 
 let params = getHashParams();
@@ -1285,8 +1277,10 @@ if (error) {
         displayName = response.display_name.toUpperCase();
         username = response.id;
         showReceipt();
-        console.log(1);
+        //console.log(1);
+        showCheckbox();
         retrieveItems();
+        //displayReceipt({items: []});
         
       },
     });
