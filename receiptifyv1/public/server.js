@@ -647,7 +647,6 @@ async function fetchUsers(sessionID, type) {
 
 
 const displayReceipt = (response, stats, state, users_checkbox = []) => {
-  console.log(response, stats, state, users_checkbox);
   const scrollPosition = window.scrollY;
   const type = getType();
   const font = getFont();
@@ -730,8 +729,6 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
       }
 
       if (getUsersCheckbox() == 0 ) {
-        console.log('before html: ',users_checkbox);
-        console.log(sessionID);
         userProfilePlaceholder.innerHTML = userProfileTemplate({
           tracks: tracksFormatted,
           total: totalFormatted,
@@ -945,16 +942,12 @@ function retrieveItems(stats, state) {
       users = await fetchUsers(sessionID, 'display_name');
       
       var users_checkbox = getUsersCheckbox(); 
-      console.log(users_checkbox);
       if (users_checkbox.length == 0){
         response_edited = {
           items: []
         }
         displayReceipt(response_edited, stats, state, users_checkbox);
       }
-      //
-
-      //console.log('Fetched Tokens', tokens);
       $('#search-form').hide();
       $('#custom-name').hide();
       $('#options').show();
@@ -1277,10 +1270,8 @@ if (error) {
         displayName = response.display_name.toUpperCase();
         username = response.id;
         showReceipt();
-        //console.log(1);
         showCheckbox();
         retrieveItems();
-        //displayReceipt({items: []});
         
       },
     });
