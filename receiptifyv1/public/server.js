@@ -845,6 +845,11 @@ function displayStats(response, artists, tracks) {
   const popularity = getAvgPopularity(artists).toFixed(2);
   const trackIDs = tracks.map(({ id }) => id);
   const age = getAvgAge(tracks);
+  /*console.log("artists: ", artists);
+  console.log("tracks: ", tracks);
+  console.log("popularity: ", popularity);
+  console.log("trackIDs: ", trackIDs);
+  console.log("age: ", age);*/
   $.ajax({
     url: `${SPOTIFY_ROOT}/audio-features?ids=${trackIDs.join(',')}`,
     headers: {
@@ -866,6 +871,7 @@ function displayStats(response, artists, tracks) {
       displayReceipt(response, statsArr);
     },
   });
+
 }
 
 function mostPlayedSongs(recentlyPlayedSongs) {
@@ -1125,24 +1131,72 @@ function retrieveItems(stats, state) {
 function retrieveStats() {
   const timeRangeSlug = getPeriod();
   const limit = 50;
-  $.ajax({
-    url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`,
-    headers: {
-      Authorization: 'Bearer ' + access_token,
-    },
-    success: (response) => {
-      const artists = response?.items;
+  var users_checkbox = getUsersCheckbox();
+  const promises_artists = [];
+  const promises_tracks = [];
+  let combined_artists = [];
+  let combined_tracks = [];
+  if (users_checkbox[0].token  == null || users_checkbox[0].user == null) {
+    
+    displayReceipt([], stats, state, users_checkbox);
+  }
+  for (var i = 0; i < users_checkbox.length; i++) {
+    const artistPromise = new Promise((resolve, reject) => {        
+      // start ajax for artists
+      $.ajax({
+        url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`,
+        headers: {
+          Authorization: 'Bearer ' + users_checkbox[i].token,
+        },
+        success: (response) => {
+          // handle artsts
+          const artists = response?.items;
+          //console.log("Top Artists (stats): ", artists);
+          combined_artists = combined_artists.concat(artists);
+          resolve(artists); // Resolve the promise when AJAX succeeds
+        },
+        error: function(error) {
+          reject(error);
+          console.error("Error: ", error);
+        }
+      });
+    });
+  
+    const trackPromise = new Promise((resolve, reject) => {        
+      // start ajax for tracks
       $.ajax({
         url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`,
         headers: {
-          Authorization: 'Bearer ' + access_token,
+          Authorization: 'Bearer ' + users_checkbox[i].token,
         },
         success: (response) => {
+          // handle tracks
           const tracks = response?.items;
-          displayStats(response, artists, tracks);
+          //console.log("Top Tracks (stats): ", tracks);
+          combined_tracks = combined_tracks.concat(tracks);
+          resolve(tracks); // Resolve the promise when AJAX succeeds
         },
+        error: function(error) {
+          reject(error);
+          console.error("Error: ", error);
+        }
       });
-    },
+    });
+  
+    // Push promises into respective arrays
+    promises_artists.push(artistPromise);
+    promises_tracks.push(trackPromise);
+  }
+  
+  // pass artists + tracks to displayStats
+  Promise.all([Promise.all(promises_artists), Promise.all(promises_tracks)]).then((results) => {
+    const [artists, tracks] = results;
+    const artists_array = [].concat(...artists);
+    const tracks_array = [].concat(...tracks);
+    displayStats(response_edited, artists_array, tracks_array);
+  })
+  .catch((errors) => {
+    console.error('Errors:', errors); // Handle any errors
   });
 }
 
@@ -1324,5 +1378,4 @@ document
     document.querySelector('.navColor ul').classList.toggle('show');
   });
 $('#logout-btn').hide();
-
 
