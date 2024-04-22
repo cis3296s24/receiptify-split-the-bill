@@ -54,6 +54,27 @@ h2 {
 p {
   font-family: Helvetica, Geneva, Tahoma, sans-serif;
 }
+
+#user-checkbox {
+  margin-bottom: 2rem;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin-left: 2rem;
+}
+
+#user-checkbox-title {
+  font-family: Inter, 'Helvetica Neue', sans-serif;
+  line-height: 1.2;
+  margin-left: -2rem;
+}
+
+#user-checkbox-label {
+  padding-left: 1rem;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: black !important;
+  font-size: 18px !important;
+}
+
+
 .logo {
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
   font-weight: 600;

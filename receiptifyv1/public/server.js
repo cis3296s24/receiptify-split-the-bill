@@ -936,8 +936,92 @@ async function nRecentlyPlayed(n, music) {
   return recentlyPlayedSongs.flat();
 }
 
-function shuffleArray(array){
-  return [...array].sort(() => Math.random() - 0.5);
+function shuffleArray(array, numPerPerson){
+  console.log(`array.length: ${array.length}`);
+  let numPeople = numPerPerson.length;
+  console.log(`Num People: ${numPeople}`);
+
+  for (let i = 0; i < array.length; i++) {
+    console.log(array[i]);
+  }
+
+  var artists = new Map();
+  let curListeners;
+  let artistInfo;
+  let currentPerson = 0;
+  let personOffset = numPerPerson[currentPerson];
+  let posInPerson = 0;
+
+  for (let i = 0; i < array.length; i++) {
+    
+    console.log(`i: ${i}, current person: ${currentPerson}, person offset: ${personOffset}, pos in person: ${posInPerson}`);
+    // update the current person based on the number of songs that each person has in the array
+    if (i >= (personOffset))
+    {
+      console.log("NEW PERSON");
+      currentPerson++;
+      personOffset = numPerPerson[currentPerson];
+      numPerPerson[currentPerson] = numPerPerson[currentPerson-1];
+      posInPerson = 0;
+    }
+
+    posInPerson++;
+
+    if (!artists.has(array[i].id))
+    {
+      //console.log("THE ITEM ISN'T IN THE ARRAY");
+      curListeners = new Array(numPeople).fill(0);
+      artistInfo = 
+      {
+        item: array[i],
+        listeners: curListeners,
+        numListeners: 1,
+        score: 0
+      };
+      artists.set(array[i].id, artistInfo);      
+    }
+    else
+    {
+      artists.get(array[i].id).numListeners++;
+    }
+
+    let currentScore = (numPerPerson[currentPerson] - posInPerson) / (parseFloat(numPerPerson[currentPerson]));
+
+    for (let j = 0; j < numPeople; j++)
+    {
+      if (j === currentPerson)
+      {
+        artists.get(array[i].id).listeners[currentPerson] = currentScore;  
+      }
+    }
+    artists.get(array[i].id).score += currentScore;
+  }
+
+  console.log("THE NEXT THING WE ARE LOGGING IS THE ARTIST THING");
+  console.log(artists);
+  var artistsCombined = new Map();
+  var artistsAlone = new Map();
+
+  for (const info of artists.values()) {
+    console.log(`info.numlisteners : ${info.numListeners}`);
+    if (info.numListeners > 1)
+    {
+      artistsCombined.set(info.item, info.score);
+    }
+    else
+    {
+      artistsAlone.set(info.item, info.score);
+    }
+  }
+
+  console.log("printing");
+
+  const sortedCombined = new Map([...artistsCombined.entries()].sort((a, b) => b[1] - a[1]));
+  const sortedAlone = new Map([...artistsAlone.entries()].sort((a, b) => b[1] - a[1]));
+
+  let newArr = [...sortedCombined.keys(), ...sortedAlone.keys()];
+  console.log(newArr);
+  return newArr;
 }
 
 function retrieveItems(stats, state) {
@@ -984,7 +1068,8 @@ function retrieveItems(stats, state) {
       const selectedType = type === 'genres' ? 'artists' : type;
       const timeRangeSlug = getPeriod();
       const limit = num;
-    
+      let numPerPerson = [];
+
       if ( type === 'artists') {
         const promises = [];
         let combined = [];
@@ -1004,6 +1089,9 @@ function retrieveItems(stats, state) {
                 const artists = response?.items;
                 console.log("Top Artists: ", artists);
                 combined = combined.concat(artists);
+                numPerPerson.push(combined.length);
+                
+
                 console.log('Concat: ', combined);
               },
               error: function(error) {
@@ -1017,14 +1105,16 @@ function retrieveItems(stats, state) {
         Promise.all(promises).then((artistData) => {
           const combined = [].concat(...artistData); // Combine all artists data
           console.log('concat final: ', combined);
-          const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined);
+          console.log(`NUM per person = ${numPerPerson}`);
+          
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log('spliced: ', shuffledCombined);
+          //console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
-          };
+          };  
           displayReceipt(response_edited, stats, state, users_checkbox);
         })
         .catch((errors) => {
@@ -1077,6 +1167,8 @@ function retrieveItems(stats, state) {
                 const tracks = response?.items;
                 console.log("Top Tracks: ", tracks);
                 combined = combined.concat(tracks);
+                numPerPerson.push(combined.length);
+
                 console.log('Concat: ', combined);
               },
               error: function(error) {
@@ -1090,11 +1182,12 @@ function retrieveItems(stats, state) {
         Promise.all(promises).then((trackData) => {
           const combined = [].concat(...trackData); // Combine all artists data
           console.log('concat final: ', combined);
-          const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined);
+          console.log(`num per person: '${numPerPerson}'`);
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log('spliced: ', shuffledCombined);
+          //console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
           };
@@ -1267,6 +1360,7 @@ function showCheckbox() {
 
       const userCheckboxTitle = document.createElement('p');
       userCheckboxTitle.textContent = "Select Users";
+      userCheckboxTitle.id = "user-checkbox-title";
       userCheckbox.appendChild(userCheckboxTitle);
 
       for (let i = 0; i < users.length; i++) {
@@ -1284,6 +1378,7 @@ function showCheckbox() {
         };
 
         const label = document.createElement('label');
+        label.id = "user-checkbox-label";
         label.textContent = users[i];
         label.htmlFor = checkbox.id;
 
