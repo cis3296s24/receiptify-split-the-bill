@@ -1306,6 +1306,7 @@ function showCheckbox() {
 
       const userCheckboxTitle = document.createElement('p');
       userCheckboxTitle.textContent = "Select Users";
+      userCheckboxTitle.id = "user-checkbox-title";
       userCheckbox.appendChild(userCheckboxTitle);
 
       for (let i = 0; i < users.length; i++) {
@@ -1323,6 +1324,7 @@ function showCheckbox() {
         };
 
         const label = document.createElement('label');
+        label.id = "user-checkbox-label";
         label.textContent = users[i];
         label.htmlFor = checkbox.id;
 
