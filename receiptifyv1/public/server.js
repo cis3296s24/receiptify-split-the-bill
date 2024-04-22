@@ -930,8 +930,81 @@ async function nRecentlyPlayed(n, music) {
   return recentlyPlayedSongs.flat();
 }
 
-function shuffleArray(array){
-  return [...array].sort(() => Math.random() - 0.5);
+function shuffleArray(array, numPerPerson){
+  console.log(`array.length: ${array.length}`);
+  let numPeople = numPerPerson.length;
+  console.log(`Num People: ${numPeople}`);
+
+  for (let i = 0; i < array.length; i++) {
+    console.log(array[i]);
+  }
+  var artists = new Map();
+  let curListeners;
+  let artistInfo;
+  let personOffset = 0;
+  let currentPerson = 1;
+  for (let i = 0; i < array.length; i++) {
+    //personOffset++; 
+    if (!artists.has(array[i].id))
+    {
+      console.log("THE ITEM ISN'T IN THE ARRAY");
+      console.log(`Num people: ${numPeople}`);
+      curListeners = new Array(numPeople).fill(0);
+      artistInfo = 
+      {
+        item: array[i],
+        listeners: curListeners,
+        numListeners: 1,
+        score: 0
+      };
+      artists.set(array[i].id, artistInfo);      
+    }
+    else
+    {
+      artists.get(array[i].id).numListeners++;
+    }
+    let currentPerson = Math.floor(i / numTop);
+    let currentScore = numTop - ((i%numTop));
+    for (let j = 1; j < numPeople; j++)
+    {
+      if (j === currentPerson)
+      {
+        artists.get(array[i].id).listeners[currentPerson] = currentScore;  
+      }
+    }
+    artists.get(array[i].id).score += currentScore;
+  }
+
+  console.log("THE NEXT THING WE ARE LOGGING IS THE ARTIST THING");
+  console.log(artists);
+  var artistsCombined = new Map();
+  var artistsAlone = new Map();
+
+
+  for (const info of artists.values()) {
+    console.log(`info.numlisteners : ${info.numListeners}`);
+    if (info.numListeners > 1)
+    {
+      artistsCombined.set(info.item, info.score);
+    }
+    else
+    {
+      artistsAlone.set(info.item, info.score);
+    }
+  }
+
+  console.log("pringing");
+  // console.log(artistsCombined);
+  // console.log(artistsAlone);
+
+  const sortedCombined = new Map([...artistsCombined.entries()].sort((a, b) => b[1] - a[1]));
+ // console.log(sortedCombined);
+  const sortedAlone = new Map([...artistsAlone.entries()].sort((a, b) => b[1] - a[1]));
+  //console.log(sortedAlone);
+
+  let newArr = [...sortedCombined.keys(), ...sortedAlone.keys()];
+  console.log(newArr);
+  return newArr;//[...array].sort(() => Math.random() - 0.5);
 }
 
 function retrieveItems(stats, state) {
@@ -978,7 +1051,8 @@ function retrieveItems(stats, state) {
       const selectedType = type === 'genres' ? 'artists' : type;
       const timeRangeSlug = getPeriod();
       const limit = num;
-    
+      let numPerPerson = [];
+
       if ( type === 'artists') {
         const promises = [];
         let combined = [];
@@ -998,6 +1072,9 @@ function retrieveItems(stats, state) {
                 const artists = response?.items;
                 console.log("Top Artists: ", artists);
                 combined = combined.concat(artists);
+                numPerPerson.push(combined.length);
+                
+
                 console.log('Concat: ', combined);
               },
               error: function(error) {
@@ -1011,14 +1088,16 @@ function retrieveItems(stats, state) {
         Promise.all(promises).then((artistData) => {
           const combined = [].concat(...artistData); // Combine all artists data
           console.log('concat final: ', combined);
-          const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined);
+          console.log(`NUM per person = ${numPerPerson}`);
+          
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log('spliced: ', shuffledCombined);
+          //console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
-          };
+          };  
           displayReceipt(response_edited, stats, state, users_checkbox);
         })
         .catch((errors) => {
@@ -1071,6 +1150,8 @@ function retrieveItems(stats, state) {
                 const tracks = response?.items;
                 console.log("Top Tracks: ", tracks);
                 combined = combined.concat(tracks);
+                numPerPerson.push(combined.length);
+
                 console.log('Concat: ', combined);
               },
               error: function(error) {
@@ -1084,11 +1165,12 @@ function retrieveItems(stats, state) {
         Promise.all(promises).then((trackData) => {
           const combined = [].concat(...trackData); // Combine all artists data
           console.log('concat final: ', combined);
-          const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined);
+          console.log(`num per person: '${numPerPerson}'`);
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log('spliced: ', shuffledCombined);
+          //console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
           };
