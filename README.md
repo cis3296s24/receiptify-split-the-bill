@@ -27,6 +27,7 @@ Once you have created your app, change the `client_id` and `client_secret` value
 
 In order to run the app, open the folder, and run its `app.js` file:
 
+    $ cd receiptifyv1
     $ node app.js
 
 Then, open `http://localhost:3000` in a browser.
@@ -45,7 +46,9 @@ A user on the same network the app is hosted on can put the host's IP and port n
 
 The first person will click the "Create Session" button and log into their Spotify account. A Session ID will appear on the top of their receipt.
 
-Other users can then click "Join Session" and after entering the shared Session ID, they can log into their Spotify accounts and view the receipt. After refreshing the page, checkboxes will appear next to each joined user's name indicating which Spotify accounts data will be included. (CURRENTLY ONLY WORKS FOR TOP ARTISTS)
+Other users can then click "Join Session" and after entering the shared Session ID, they can log into their Spotify accounts and view the receipt. 
+
+After refreshing the page, checkboxes will appear next to each joined user's name indicating which Spotify accounts data will be included. You can pick from viewing Top Tracks, Top Artists, Stats, and Top Genres (CURRENTLY ONLY WORKS FOR TOP ARTISTS, TRACKS, AND STATS). You can also change the time period data is drawn from and length of receipt. Under the receipt, you can download the image or open it in a new tab.
 
 
 <img width="764" alt="Screenshot 2024-04-17 at 9 45 04 AM" src="https://github.com/cis3296s24/receiptify-split-the-bill/assets/143619402/f9875fce-31c0-4877-b5a8-0a2dc279ef25">
