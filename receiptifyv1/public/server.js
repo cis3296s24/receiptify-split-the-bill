@@ -938,17 +938,32 @@ function shuffleArray(array, numPerPerson){
   for (let i = 0; i < array.length; i++) {
     console.log(array[i]);
   }
+
   var artists = new Map();
   let curListeners;
   let artistInfo;
-  let personOffset = 0;
-  let currentPerson = 1;
+  let currentPerson = 0;
+  let personOffset = numPerPerson[currentPerson];
+  let posInPerson = 0;
+
   for (let i = 0; i < array.length; i++) {
-    //personOffset++; 
+    
+    console.log(`i: ${i}, current person: ${currentPerson}, person offset: ${personOffset}, pos in person: ${posInPerson}`);
+    // update the current person based on the number of songs that each person has in the array
+    if (i >= (personOffset))
+    {
+      console.log("NEW PERSON");
+      currentPerson++;
+      personOffset = numPerPerson[currentPerson];
+      numPerPerson[currentPerson] = numPerPerson[currentPerson-1];
+      posInPerson = 0;
+    }
+
+    posInPerson++;
+
     if (!artists.has(array[i].id))
     {
-      console.log("THE ITEM ISN'T IN THE ARRAY");
-      console.log(`Num people: ${numPeople}`);
+      //console.log("THE ITEM ISN'T IN THE ARRAY");
       curListeners = new Array(numPeople).fill(0);
       artistInfo = 
       {
@@ -963,9 +978,10 @@ function shuffleArray(array, numPerPerson){
     {
       artists.get(array[i].id).numListeners++;
     }
-    let currentPerson = Math.floor(i / numTop);
-    let currentScore = numTop - ((i%numTop));
-    for (let j = 1; j < numPeople; j++)
+
+    let currentScore = (numPerPerson[currentPerson] - posInPerson) / (parseFloat(numPerPerson[currentPerson]));
+
+    for (let j = 0; j < numPeople; j++)
     {
       if (j === currentPerson)
       {
@@ -980,7 +996,6 @@ function shuffleArray(array, numPerPerson){
   var artistsCombined = new Map();
   var artistsAlone = new Map();
 
-
   for (const info of artists.values()) {
     console.log(`info.numlisteners : ${info.numListeners}`);
     if (info.numListeners > 1)
@@ -993,18 +1008,14 @@ function shuffleArray(array, numPerPerson){
     }
   }
 
-  console.log("pringing");
-  // console.log(artistsCombined);
-  // console.log(artistsAlone);
+  console.log("printing");
 
   const sortedCombined = new Map([...artistsCombined.entries()].sort((a, b) => b[1] - a[1]));
- // console.log(sortedCombined);
   const sortedAlone = new Map([...artistsAlone.entries()].sort((a, b) => b[1] - a[1]));
-  //console.log(sortedAlone);
 
   let newArr = [...sortedCombined.keys(), ...sortedAlone.keys()];
   console.log(newArr);
-  return newArr;//[...array].sort(() => Math.random() - 0.5);
+  return newArr;
 }
 
 function retrieveItems(stats, state) {
