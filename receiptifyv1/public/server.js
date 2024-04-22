@@ -1223,7 +1223,7 @@ function retrieveItems(stats, state) {
 
 function retrieveStats() {
   const timeRangeSlug = getPeriod();
-  const limit = 50;
+  const limit = 10; // changed from 50 to handle more users
   var users_checkbox = getUsersCheckbox();
   const promises_artists = [];
   const promises_tracks = [];
