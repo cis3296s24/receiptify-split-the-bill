@@ -258,13 +258,7 @@ async function processFile(filePath, sessionID, col) {
     });
     const users = [];
     var newDB = "";
-    var first = true;
     for await (const line of rl) {
-      if(first){
-        newDB += line + "\n";
-        first = false;
-        continue;
-      }
       const row = line.split(',');
       if (row[2] == sessionID) {
         users.push(row[col]);
@@ -297,6 +291,9 @@ app.get('/callback', function (req, res) {
   if (req.cookies[sessionIDString] != null){
     sessionID = req.cookies[sessionIDString];
   }
+  
+  //res.sendFile(__dirname + '/public/join.html');
+
 
   var code = req.query.code || null;
   var state = req.query.state || null;
