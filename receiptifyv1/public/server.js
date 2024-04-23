@@ -351,8 +351,6 @@ const getUsersCheckbox = () => {
   }
 
   var users_checkbox = users.map((user, index) =>({ user, token: tokens[index]}));
-
-  // return list of objects. list of user object with name and token.
   return users_checkbox;
 }
 
@@ -657,32 +655,7 @@ async function fetchUsers(sessionID, type) {
 ;}
 
 
-function checkboxUpdate(stats, state, users_checkbox, user, isChecked) {
-  if (users_checkbox.map(obj => obj.user).includes(null) || users_checkbox.map(obj => obj.token).includes(null)) {
-    users_checkbox.shift();
-  }
-  if (!isChecked){
-    console.log(`Before: ${users_checkbox}`);
-    for (let i = 0; i < users_checkbox.length; i++) {
-      if (users_checkbox[i].user == user){
-        users_checkbox.splice(i, 1);
-      }
-    }
-    console.log(`After: ${users_checkbox}`);
-  } else {
-    console.log(`Before: ${users_checkbox}`);
-    users_checkbox.push(user);
-    console.log(`After: ${users_checkbox}`);
-  }
-  if (users_checkbox.length == 0){
-    users_checkbox.push({user: null, token: null});
-  }
-  retrieveItems(stats, state);
-;}
-
-
 const displayReceipt = (response, stats, state, users_checkbox = []) => {
-  console.log(response, stats, state, users_checkbox);
   const scrollPosition = window.scrollY;
   const type = getType();
   const font = getFont();
@@ -745,55 +718,26 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
       let total = 0;
       const date = TODAY.toLocaleDateString('en-US', DATE_OPTIONS).toUpperCase();
-      const tracksFormatted = responseItems.map((item, i) => {
-        total += totalIncrement(item);
-        return {
-          id: (i + 1 < 10 ? '0' : '') + (i + 1),
-          url: item.external_urls?.spotify,
-          ...Object.fromEntries(
-            Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
-          ),
-        };
-      });
-      const totalFormatted =
-        type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
-      
-
-      if (users_checkbox.length == 0){
-        console.log("No Previous users_checkbox");
-        users_checkbox = users.map((user, index) => ({ user, token: tokens[index]}));
-        
-        const userCheckbox = document.getElementById('user-checkbox');
-        userCheckbox.innerHTML = "";
-        const userCheckboxTitle = document.createElement('p');
-        userCheckboxTitle.textContent = "Select Users";
-        userCheckbox.appendChild(userCheckboxTitle);
-        for (let i = 0; i < users.length; i++) {
-          const checkbox = document.createElement('input');
-          checkbox.name = 'user-select-checkbox';
-          checkbox.type = 'checkbox';
-          checkbox.id = tokens[i];
-          checkbox.checked = users_checkbox.map(obj => obj.user).includes(users[i])
-          checkbox.onclick = (event) =>{
-            const isChecked = event.target.checked;
-            checkboxUpdate(stats, state, users_checkbox, users[i], isChecked);
-          }
-
-          const label = document.createElement('label');
-          label.textContent = users[i];
-          label.htmlFor = checkbox.id;
-          
-          userCheckbox.appendChild(checkbox);
-          userCheckbox.appendChild(label);
-          userCheckbox.appendChild(document.createElement('br'));
-        }
-      } else {
-        console.log("Previous users_checkbox");
+      var tracksFormatted = [];
+      var totalFormatted = '00:00';
+      try {
+        tracksFormatted = responseItems.map((item, i) => {
+          total += totalIncrement(item);
+          return {
+            id: (i + 1 < 10 ? '0' : '') + (i + 1),
+            url: item.external_urls?.spotify,
+            ...Object.fromEntries(
+              Object.entries(itemFns).map(([key, fn]) => [key, fn(item)])
+            ),
+          };
+        });
+        totalFormatted =
+          type === 'tracks' || showSearch ? getMinSeconds(total) : total.toFixed(2);
+      } catch {
+        console.log('No Users Selected.')
       }
-      console.log(users_checkbox);
-      if (users_checkbox[0].token == null || users_checkbox[0].user == null) {
-        console.log('before html: ',users_checkbox);
-        console.log(sessionID);
+
+      if (getUsersCheckbox() == 0 ) {
         userProfilePlaceholder.innerHTML = userProfileTemplate({
           tracks: tracksFormatted,
           total: totalFormatted,
@@ -814,8 +758,6 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
           isInternational: font === 'international',
         });
       } else {
-        console.log('before html: ',users_checkbox);
-        console.log(sessionID);
         userProfilePlaceholder.innerHTML = userProfileTemplate({
           tracks: tracksFormatted,
           total: totalFormatted,
@@ -853,10 +795,10 @@ const displayReceipt = (response, stats, state, users_checkbox = []) => {
 
       if (type === 'tracks') {
         console.log('tracks')
-        $('#save-playlist').show();
-        document
-          .getElementById('save-playlist')
-          ?.addEventListener('click', () => saveAsPlaylist(response));
+        //$('#save-playlist').show();
+        //document
+          //.getElementById('save-playlist')
+          //?.addEventListener('click', () => saveAsPlaylist(response));
       } else {
         console.log('other types');
         $('#save-playlist').hide();
@@ -912,6 +854,11 @@ function displayStats(response, artists, tracks) {
   const popularity = getAvgPopularity(artists).toFixed(2);
   const trackIDs = tracks.map(({ id }) => id);
   const age = getAvgAge(tracks);
+  /*console.log("artists: ", artists);
+  console.log("tracks: ", tracks);
+  console.log("popularity: ", popularity);
+  console.log("trackIDs: ", trackIDs);
+  console.log("age: ", age);*/
   $.ajax({
     url: `${SPOTIFY_ROOT}/audio-features?ids=${trackIDs.join(',')}`,
     headers: {
@@ -933,6 +880,7 @@ function displayStats(response, artists, tracks) {
       displayReceipt(response, statsArr);
     },
   });
+
 }
 
 function mostPlayedSongs(recentlyPlayedSongs) {
@@ -997,29 +945,108 @@ async function nRecentlyPlayed(n, music) {
   return recentlyPlayedSongs.flat();
 }
 
-function shuffleArray(array){
-  return [...array].sort(() => Math.random() - 0.5);
+function shuffleArray(array, numPerPerson){
+  console.log(`array.length: ${array.length}`);
+  let numPeople = numPerPerson.length;
+  console.log(`Num People: ${numPeople}`);
+
+  for (let i = 0; i < array.length; i++) {
+    console.log(array[i]);
+  }
+
+  var artists = new Map();
+  let curListeners;
+  let artistInfo;
+  let currentPerson = 0;
+  let personOffset = numPerPerson[currentPerson];
+  let posInPerson = 0;
+
+  for (let i = 0; i < array.length; i++) {
+    
+    console.log(`i: ${i}, current person: ${currentPerson}, person offset: ${personOffset}, pos in person: ${posInPerson}`);
+    // update the current person based on the number of songs that each person has in the array
+    if (i >= (personOffset))
+    {
+      console.log("NEW PERSON");
+      currentPerson++;
+      personOffset = numPerPerson[currentPerson];
+      numPerPerson[currentPerson] = numPerPerson[currentPerson-1];
+      posInPerson = 0;
+    }
+
+    posInPerson++;
+
+    if (!artists.has(array[i].id))
+    {
+      //console.log("THE ITEM ISN'T IN THE ARRAY");
+      curListeners = new Array(numPeople).fill(0);
+      artistInfo = 
+      {
+        item: array[i],
+        listeners: curListeners,
+        numListeners: 1,
+        score: 0
+      };
+      artists.set(array[i].id, artistInfo);      
+    }
+    else
+    {
+      artists.get(array[i].id).numListeners++;
+    }
+
+    let currentScore = (numPerPerson[currentPerson] - posInPerson) / (parseFloat(numPerPerson[currentPerson]));
+
+    for (let j = 0; j < numPeople; j++)
+    {
+      if (j === currentPerson)
+      {
+        artists.get(array[i].id).listeners[currentPerson] = currentScore;  
+      }
+    }
+    artists.get(array[i].id).score += currentScore;
+  }
+
+  console.log("THE NEXT THING WE ARE LOGGING IS THE ARTIST THING");
+  console.log(artists);
+  var artistsCombined = new Map();
+  var artistsAlone = new Map();
+
+  for (const info of artists.values()) {
+    console.log(`info.numlisteners : ${info.numListeners}`);
+    if (info.numListeners > 1)
+    {
+      artistsCombined.set(info.item, info.score);
+    }
+    else
+    {
+      artistsAlone.set(info.item, info.score);
+    }
+  }
+
+  console.log("printing");
+
+  const sortedCombined = new Map([...artistsCombined.entries()].sort((a, b) => b[1] - a[1]));
+  const sortedAlone = new Map([...artistsAlone.entries()].sort((a, b) => b[1] - a[1]));
+
+  let newArr = [...sortedCombined.keys(), ...sortedAlone.keys()];
+  console.log(newArr);
+  return newArr;
 }
 
 function retrieveItems(stats, state) {
 
-  console.log('getUsers: ', getUsersCheckbox());
-  users_checkbox = getUsersCheckbox(); //needs to be a an array of obj
-  console.log('getUsers: ', [users_checkbox]);
-
-  if (users_checkbox.length == 0){
-    users_checkbox.push({user: null, token: null});
-    console.log('push null retrieveItems');
-    response_edited = {
-      items: []
-    }
-    displayReceipt(response_edited, stats, state, users_checkbox);
-  }
-
   (async () => {
     try {
       tokens = await fetchUsers(sessionID, 'access_token');
-      //console.log('Fetched Tokens', tokens);
+      users = await fetchUsers(sessionID, 'display_name');
+      
+      var users_checkbox = getUsersCheckbox(); 
+      if (users_checkbox.length == 0){
+        response_edited = {
+          items: []
+        }
+        displayReceipt(response_edited, stats, state, users_checkbox);
+      }
       $('#search-form').hide();
       $('#custom-name').hide();
       $('#options').show();
@@ -1050,11 +1077,15 @@ function retrieveItems(stats, state) {
       const selectedType = type === 'genres' ? 'artists' : type;
       const timeRangeSlug = getPeriod();
       const limit = num;
+
     
+      let numPerPerson = [];
       if ( type === 'artists' || type === 'genres') {
+
+      
+
         const promises = [];
         let combined = [];
-        const timeRangeSlug = "short_term";
         if (users_checkbox[0].token  == null || users_checkbox[0].user == null) {
           displayReceipt([], stats, state, users_checkbox);
         }
@@ -1063,8 +1094,7 @@ function retrieveItems(stats, state) {
             $.ajax({
               url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`, 
               headers: {
-                //Authorization: 'Bearer ' + users_checkbox[i].id,
-                Authorization: 'Bearer ' + users_checkbox[i].token //null
+                Authorization: 'Bearer ' + users_checkbox[i].token 
               },
               success: (response) => {
                 resolve(response?.items);
@@ -1072,6 +1102,9 @@ function retrieveItems(stats, state) {
                 const artists = response?.items;
                 console.log("Top Artists: ", artists);
                 combined = combined.concat(artists);
+                numPerPerson.push(combined.length);
+                
+
                 console.log('Concat: ', combined);
               },
               error: function(error) {
@@ -1085,16 +1118,17 @@ function retrieveItems(stats, state) {
         Promise.all(promises).then((artistData) => {
           const combined = [].concat(...artistData); // Combine all artists data
           console.log('concat final: ', combined);
-          const shuffledCombined = shuffleArray(combined); 
-          console.log('shuffled: ', shuffledCombined)
+          console.log(`NUM per person = ${numPerPerson}`);
+          
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
           // Shuffle the combined data
           shuffledCombined.splice(num);
-          console.log('spliced: ', shuffledCombined);
+          //console.log('spliced: ', shuffledCombined);
           response_edited = {
             items: shuffledCombined
-          }
+          };  
           displayReceipt(response_edited, stats, state, users_checkbox);
-          //return response_edited;
         })
         .catch((errors) => {
           console.error('Errors:', errors); // Handle any errors
@@ -1125,11 +1159,63 @@ function retrieveItems(stats, state) {
             }
           },
         });
+
         //console.log(item);
       }*/
       //} //else { // shows tracks
-        else if(type === 'tracks'){
-        //console.log('ajax call else');
+      
+      if (type === 'tracks'){
+        const promises = [];
+        let combined = [];
+        if (getUsersCheckbox().length == 0) {
+          displayReceipt([{items: []}], stats, state, []);
+        }
+        for (var i = 0; i < users_checkbox.length; i++) {
+          const promise = new Promise((resolve, reject) => {
+            $.ajax({
+              url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`, 
+              headers: {
+                Authorization: 'Bearer ' + users_checkbox[i].token 
+              },
+              success: (response) => {
+                resolve(response?.items);
+
+                const tracks = response?.items;
+                console.log("Top Tracks: ", tracks);
+                combined = combined.concat(tracks);
+                numPerPerson.push(combined.length);
+
+                console.log('Concat: ', combined);
+              },
+              error: function(error) {
+                reject(error);
+                console.error("Error: ", error);
+              }
+            })
+          })
+          promises.push(promise);
+        }
+        Promise.all(promises).then((trackData) => {
+          const combined = [].concat(...trackData); // Combine all artists data
+          console.log('concat final: ', combined);
+          console.log(`num per person: '${numPerPerson}'`);
+          const shuffledCombined = shuffleArray(combined, numPerPerson); 
+          //console.log('shuffled: ', shuffledCombined);
+          // Shuffle the combined data
+          shuffledCombined.splice(num);
+          //console.log('spliced: ', shuffledCombined);
+          response_edited = {
+            items: shuffledCombined
+          };
+          displayReceipt(response_edited, stats, state, users_checkbox);
+        })
+        .catch((errors) => {
+          console.error('Errors:', errors); // Handle any errors
+        });
+        
+
+        /*
+        console.log(users_checkbox[0].token);
         $.ajax({
           url: `${SPOTIFY_ROOT}/me/top/${
             selectedType ?? 'tracks'
@@ -1139,6 +1225,8 @@ function retrieveItems(stats, state) {
           },
           success: displayReceipt,
         });
+        */
+        
       }
     } catch (error) {
       console.error('Error: ', error);
@@ -1151,25 +1239,73 @@ function retrieveItems(stats, state) {
 
 function retrieveStats() {
   const timeRangeSlug = getPeriod();
-  const limit = 50;
-  $.ajax({
-    url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`,
-    headers: {
-      Authorization: 'Bearer ' + access_token,
-    },
-    success: (response) => {
-      const artists = response?.items;
+  const limit = 10; // changed from 50 to handle more users
+  var users_checkbox = getUsersCheckbox();
+  const promises_artists = [];
+  const promises_tracks = [];
+  let combined_artists = [];
+  let combined_tracks = [];
+  if (users_checkbox[0].token  == null || users_checkbox[0].user == null) {
+    
+    displayReceipt([], stats, state, users_checkbox);
+  }
+  for (var i = 0; i < users_checkbox.length; i++) {
+    const artistPromise = new Promise((resolve, reject) => {        
+      // start ajax for artists
+      $.ajax({
+        url: `${SPOTIFY_ROOT}/me/top/artists?limit=${limit}&time_range=${timeRangeSlug}`,
+        headers: {
+          Authorization: 'Bearer ' + users_checkbox[i].token,
+        },
+        success: (response) => {
+          // handle artsts
+          const artists = response?.items;
+          //console.log("Top Artists (stats): ", artists);
+          combined_artists = combined_artists.concat(artists);
+          resolve(artists); // Resolve the promise when AJAX succeeds
+        },
+        error: function(error) {
+          reject(error);
+          console.error("Error: ", error);
+        }
+      });
+    });
+  
+    const trackPromise = new Promise((resolve, reject) => {        
+      // start ajax for tracks
       $.ajax({
         url: `${SPOTIFY_ROOT}/me/top/tracks?limit=${limit}&time_range=${timeRangeSlug}`,
         headers: {
-          Authorization: 'Bearer ' + access_token,
+          Authorization: 'Bearer ' + users_checkbox[i].token,
         },
         success: (response) => {
+          // handle tracks
           const tracks = response?.items;
-          displayStats(response, artists, tracks);
+          //console.log("Top Tracks (stats): ", tracks);
+          combined_tracks = combined_tracks.concat(tracks);
+          resolve(tracks); // Resolve the promise when AJAX succeeds
         },
+        error: function(error) {
+          reject(error);
+          console.error("Error: ", error);
+        }
       });
-    },
+    });
+  
+    // Push promises into respective arrays
+    promises_artists.push(artistPromise);
+    promises_tracks.push(trackPromise);
+  }
+  
+  // pass artists + tracks to displayStats
+  Promise.all([Promise.all(promises_artists), Promise.all(promises_tracks)]).then((results) => {
+    const [artists, tracks] = results;
+    const artists_array = [].concat(...artists);
+    const tracks_array = [].concat(...tracks);
+    displayStats(response_edited, artists_array, tracks_array);
+  })
+  .catch((errors) => {
+    console.error('Errors:', errors); // Handle any errors
   });
 }
 
@@ -1224,6 +1360,55 @@ function retrieveStats() {
     .addEventListener('click', () => downloadImg('heavy_rotation'));
 }*/
 
+function showCheckbox() {
+  console.log('showCheckbox()');
+
+  (async () => {
+    try {
+      const tokens = await fetchUsers(sessionID, 'access_token');
+      const users = await fetchUsers(sessionID, 'display_name');
+
+      // Combine user data with tokens (assuming tokens match user order)
+      const users_checkbox = users.map((user, index) => ({ user, token: tokens[index] }));
+
+      const userCheckbox = document.getElementById('user-checkbox');
+      userCheckbox.innerHTML = "";
+
+      const userCheckboxTitle = document.createElement('p');
+      userCheckboxTitle.textContent = "Select Users";
+      userCheckboxTitle.id = "user-checkbox-title";
+      userCheckbox.appendChild(userCheckboxTitle);
+
+      for (let i = 0; i < users.length; i++) {
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = tokens[i]; // Use token for unique ID
+        checkbox.name = 'user-select-checkbox';
+
+        // Check if user is already selected based on users_checkbox
+        checkbox.checked = users_checkbox.map(obj => obj.user).includes(users[i]);
+
+        checkbox.onclick = (event) => {
+          const isChecked = event.target.checked;
+          retrieveItems()
+        };
+
+        const label = document.createElement('label');
+        label.id = "user-checkbox-label";
+        label.textContent = users[i];
+        label.htmlFor = checkbox.id;
+
+        userCheckbox.appendChild(checkbox);
+        userCheckbox.appendChild(label);
+        userCheckbox.appendChild(document.createElement('br'));
+      }
+    } catch (error) {
+      console.error('Error: ', error);
+    }
+  })();
+}
+
+
 
 
 let params = getHashParams();
@@ -1250,6 +1435,7 @@ if (error) {
         displayName = response.display_name.toUpperCase();
         username = response.id;
         showReceipt();
+        showCheckbox();
         retrieveItems();
         
       },
@@ -1303,5 +1489,4 @@ document
     document.querySelector('.navColor ul').classList.toggle('show');
   });
 $('#logout-btn').hide();
-
 
