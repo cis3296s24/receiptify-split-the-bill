@@ -290,6 +290,8 @@ app.get('/callback', function (req, res) {
   sessionIDString = 'sessionID'
   if (req.cookies[sessionIDString] != null){
     sessionID = req.cookies[sessionIDString];
+    res.cookie(sessionIDString, '', { maxAge: 0 });
+    res.clearCookie(sessionIDString);
   }
   
   //res.sendFile(__dirname + '/public/join.html');
