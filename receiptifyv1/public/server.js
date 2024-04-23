@@ -622,8 +622,17 @@ function getTopGenres(artists) {
   genreArr.sort(function (first, second) {
     return second.duration_ms - first.duration_ms;
   });
+  let totalTime = 0;
+  for(let i = 0; i < 10; i++){ 
+    console.log("helloe");
+    totalTime += genreArr[i].duration_ms;
+  }
+  for(let i = 0; i < 10; i++){ 
+    genreArr[i].duration_ms = genreArr[i].duration_ms * (100 / totalTime);
+  }
   return genreArr.slice(0, 10);
 }
+
 
 const removeTrack = (i) => {
   console.log(i);
@@ -1042,7 +1051,7 @@ function retrieveItems(stats, state) {
       const timeRangeSlug = getPeriod();
       const limit = num;
     
-      if ( type === 'artists') {
+      if ( type === 'artists' || type === 'genres') {
         const promises = [];
         let combined = [];
         const timeRangeSlug = "short_term";
@@ -1091,7 +1100,7 @@ function retrieveItems(stats, state) {
           console.error('Errors:', errors); // Handle any errors
         });
       }
-      
+      /*
       if (type === 'genres') {
         $.ajax({
           url: `${SPOTIFY_ROOT}/me/top/artists?limit=49&time_range=${timeRangeSlug}`,
@@ -1117,7 +1126,8 @@ function retrieveItems(stats, state) {
           },
         });
         //console.log(item);
-      } //else { // shows tracks
+      }*/
+      //} //else { // shows tracks
         else if(type === 'tracks'){
         //console.log('ajax call else');
         $.ajax({

@@ -27,8 +27,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 
-const client_id = '792207d6524f4255a1730e478d8b66f6';
-const client_secret = 'fd5c90696d984ca7a65a54853f340c70';
+const client_id = 'ed86dba0999b415e8c50d26b13fb29f8';
+const client_secret = 'f1421f43be4644dca0076e500d9ed0a6';
 //const privateKey = fs.readFileSync('AuthKey_A8FKGGUQP3.p8').toString();
 const teamId = process.env.teamId;
 const keyId = process.env.keyId;
@@ -258,13 +258,7 @@ async function processFile(filePath, sessionID, col) {
     });
     const users = [];
     var newDB = "";
-    var first = true;
     for await (const line of rl) {
-      if(first){
-        newDB += line + "\n";
-        first = false;
-        continue;
-      }
       const row = line.split(',');
       if (row[2] == sessionID) {
         users.push(row[col]);
@@ -297,6 +291,9 @@ app.get('/callback', function (req, res) {
   if (req.cookies[sessionIDString] != null){
     sessionID = req.cookies[sessionIDString];
   }
+  
+  //res.sendFile(__dirname + '/public/join.html');
+
 
   var code = req.query.code || null;
   var state = req.query.state || null;
